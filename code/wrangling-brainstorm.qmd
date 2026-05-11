@@ -40,3 +40,49 @@ veg <- read_csv(here("data", "raw", "veg.csv"))
 metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 ```
 
+# 2. Exploring data structure
+
+```{r}
+#| label: explore-structure
+
+glimpse(veg)
+glimpse(metadata)
+unique(veg)
+unique(veg$transect_name)
+unique(veg$year)
+unique(veg$cover_category)
+```
+
+```{r}
+#| label: explore-transects
+
+veg |> 
+  distinct(transect_name, habitat) |> 
+  arrange(transect_name) |> 
+  print(n = Inf)
+```
+
+```{r}
+#| label: explore-grasslands(GL)-peripheral_uplands(PU)
+
+veg |> 
+  filter(str_detect(transect_name, "GL|PU")) |> 
+  distinct(transect_name, habitat, psoc, cover_category) |> 
+  arrange(transect_name, cover_category) |> 
+  print(n = Inf)
+```
+
+```{r}
+#| label: explore-cover-categories
+
+# confirmed cover_category values:
+# "NATIVE COVER", "NON-NATIVE COVER", "BARE GROUND", "THATCH", "OTHER COVER"
+# for all analyses we will filter to only NATIVE COVER and NON-NATIVE COVER, the rest would be Other
+
+# confirmed clover species codes:
+# sweet clover: Melilotus_indicus (and possibly Melilotus_albus (white sweet clover) - check with Garrett)
+# bur clover: Medicago_polymorpha
+
+# TODO: get exact transect names for fire-only, sheep-only, fire+sheep plots
+```
+
