@@ -1,4 +1,42 @@
 ---
-title: "wrangling-brainstorm"
+title: "NCOS Mesa Vegetation: Wrangling Brainstorm"
 format: pdf
+author: Lukas Lescano
+date: "2026-05-11"
+editor: source
+execute: 
+  message: false
+  warning: false
 ---
+
+# 1. Set up
+
+## Packages
+
+```{r}
+#| label: packages
+#| message: false
+
+# general use
+library(tidyverse)
+library(janitor)
+
+# file organization
+library(here)
+
+# data visualization
+library(naniar)
+library(patchwork)
+library(scales)
+```
+
+## Data
+
+```{r}
+#| label: data
+
+veg <- read_csv(here("data", "raw", "veg.csv"))
+
+metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
+```
+
