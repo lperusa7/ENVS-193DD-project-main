@@ -95,3 +95,45 @@ melilotus_albus <- veg |>
                      "Melilotus_indicus"))
 ```
 
+```{r}
+#| label: wrangling veg
+
+poaceae_species <- c(
+  "Bromus_hordeaceus",
+  "Festuca_perennis",
+  "Stipa_pulchra",
+  "Polypogon_monspeliensis",
+  "Brachypodium_distachyon",
+  "Festuca_myuros",
+  "Avena_barbata",
+  "Hordeum_marinum",
+  "Avena_fatua",
+  "Parapholis_incurva",
+  "Bromus_diandrus",
+  "Distichlis_spicata",
+  "Bromus_catharticus",
+  "Hordeum_murinum",
+  "Hordeum_brachyantherum_brachy.",
+  "Cortaderia_selloana",
+  "Festuca_bromoides",
+  "Cynodon_dactylon",
+  "Poa_annua",
+  "Festuca_microstachys",
+  "Polypogon_viridis",
+  "Crypsis_schoenoides",
+  "Polypogon_interruptus",
+  "Hordeum_brachyantherum",
+  "Bromus_madritensis",
+  "Elymus_triticoides"
+)
+
+grassland <- veg |> 
+  # keep only NCOS Mesa grassland transects and only grass species
+  filter(
+    str_detect(transect_name, "GL"),
+    site == "ncos",
+    psoc %in% poaceae_species
+  )
+```
+
+
