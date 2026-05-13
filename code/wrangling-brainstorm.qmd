@@ -89,6 +89,7 @@ veg |>
 ```{r}
 #| label: exploring white sweet clover
 
+#new object from veg
 melilotus_albus <- veg |> 
   filter(psoc %in% c("Melilotus_albus",
                      "Melilotus_indicus"))
