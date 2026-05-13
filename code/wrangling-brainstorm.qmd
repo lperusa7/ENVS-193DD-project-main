@@ -167,12 +167,3 @@ target_veg <- veg |>
     !psoc %in% native_forbs
   )
 ```
-
-# 3.  Code wrangling pseudocode
-
-- 1. filter by ncos and GL
-- 2. filter by poaceae species (grasses)
-- 3. 
-
-
-
