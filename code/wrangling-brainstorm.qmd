@@ -86,3 +86,11 @@ veg |>
 # TODO: get exact transect names for fire-only, sheep-only, fire+sheep plots
 ```
 
+```{r}
+#| label: exploring white sweet clover
+
+melilotus_albus <- veg |> 
+  filter(psoc %in% c("Melilotus_albus",
+                     "Melilotus_indicus"))
+```
+
