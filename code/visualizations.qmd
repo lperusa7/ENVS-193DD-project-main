@@ -17,7 +17,6 @@ library(here)
 #| label: data
 #| echo: false
 
-
 # read in data
 veg <- read_csv(here("data", "raw", "veg.csv"))
 
@@ -92,9 +91,27 @@ target_veg <- veg |>
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
   )
-
 ```
 
+# Setting Plot Aesthetics
+```{r}
+#| label: plot-aesthetics
+
+colors <- c(
+  "#0077BB",
+  "#33BBEE",
+  "#009988",
+  "#EE7733",
+  "#CC3311",
+  "#EE3377",
+  "#AA4499"
+)
+
+theme_set(
+  theme_bw() +
+    theme(text = element_text(size = 14))
+)
+```
 
 # Plot 1: Timeseries
 ```{r}
