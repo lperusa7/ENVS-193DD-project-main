@@ -3,8 +3,10 @@ title: "Visualizations"
 format: pdf
 ---
 
+# 1. Set up
 
-# Packages
+## Packages
+
 ```{r}
 library(tidyverse)
 library(janitor)
@@ -12,6 +14,8 @@ library(ggrepel)
 library(cowplot)
 library(here)
 ```
+
+## Data 
 
 ```{r}
 #| label: data
@@ -22,7 +26,40 @@ veg <- read_csv(here("data", "raw", "veg.csv"))
 
 metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 
-# wrangle data
+```
+
+# 2. Wrangling Data
+
+```{r}
+#| label: creating pools_explicit0 dataframe
+
+# create a new object from veg
+gl_explicit0 <- veg |> 
+  # filter all occurrences where transect_name contains VP
+  filter(str_detect(transect_name, "GL"),
+         site == "ncos") |> 
+  # complete all possible combinations of year, pool, psoc and distance
+  complete(year, transect_name, psoc, transect_distance,
+           # fill values of percent cover with 0
+           fill = list(percent_cover = 0)
+           ) |>
+  # group by year, pool, and psoc
+  group_by(year, transect_name, psoc) |>
+  # calculate total percent cover across all quads
+  summarize(sum_pc = sum(percent_cover, na.rm = TRUE)) |>
+  # ungroup the data frame
+  ungroup() |>
+  # create a new column called year_pool from year and transect name
+  unite("year_pool", year, transect_name, remove = TRUE) |> 
+  # join with metadata data frame
+  left_join(metadata, by = "year_pool") |> 
+  # calculate mean percent cover from total percent cover/number of quadrats
+  mutate(mean_pc = sum_pc/num_quad)
+```
+
+```{r}
+#| label: adding target species list
+
 poaceae_species <- c(
   "Bromus_hordeaceus",
   "Festuca_perennis",
@@ -83,17 +120,22 @@ exclude_other <- c(
   "Eleocharis_acicularis",
   "Eleocharis_palustris"
 )
+```
 
-target_veg <- veg |>
+```{r}
+#| label: creating target_veg data frame
+
+target_veg <- gl_explicit0 |>
   filter(
-    str_detect(transect_name, "GL"),
-    site == "ncos",
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
   )
 ```
 
-# Setting Plot Aesthetics
+# Visualizations 
+
+## Setting Plot Aesthetics
+
 ```{r}
 #| label: plot-aesthetics
 
@@ -113,22 +155,22 @@ theme_set(
 )
 ```
 
-# Plot 1: Timeseries
+## Plot 1: Timeseries
 ```{r}
 
 ```
 
-# Plot 2: (_)
+## Plot 2: (_)
 ```{r}
 
 ```
 
-# Plot 3: (_)
+## Plot 3: (_)
 ```{r}
 
 ```
 
-# Plot 4: (_)
+## Plot 4: (_)
 ```{r}
 
 ```
