@@ -13,7 +13,86 @@ library(cowplot)
 library(here)
 ```
 
-# Data
+```{r}
+#| label: data
+#| echo: false
+
+# read in data
+veg <- read_csv(here("data", "raw", "veg.csv"))
+
+metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
+
+# wrangle data
+poaceae_species <- c(
+  "Bromus_hordeaceus",
+  "Festuca_perennis",
+  "Stipa_pulchra",
+  "Polypogon_monspeliensis",
+  "Brachypodium_distachyon",
+  "Festuca_myuros",
+  "Avena_barbata",
+  "Hordeum_marinum",
+  "Avena_fatua",
+  "Parapholis_incurva",
+  "Bromus_diandrus",
+  "Distichlis_spicata",
+  "Bromus_catharticus",
+  "Hordeum_murinum",
+  "Hordeum_brachyantherum_brachy.",
+  "Polypogon_viridis",
+  "Cortaderia_selloana",
+  "Festuca_bromoides",
+  "Cynodon_dactylon",
+  "Poa_annua",
+  "Festuca_microstachys",
+  "Crypsis_schoenoides",
+  "Polypogon_interruptus",
+  "Hordeum_brachyantherum",
+  "Bromus_madritensis",
+  "Elymus_triticoides"
+)
+
+native_forbs <- c(
+  "Plantago_erecta",
+  "Sisyrinchium_bellum",
+  "Sidalcea_malviflora",
+  "Eryngium_vaseyi",
+  "Acmispon_maritimus",
+  "Acmispon_wrangelianus",
+  "Madia_sativa",
+  "Psilocarphus_tennulus",
+  "Psilocarphus_brevissimus",
+  "Spergularia_macrotheca",
+  "Centromadia_parryi_australis",
+  "Lepidium_nitidum",
+  "Stebbinsoseris_heterocarpa",
+  "Laennecia_coulteri"
+)
+
+exclude_other <- c(
+  "Bare Ground",
+  "Natural Thatch",
+  "unlisted",
+  "moss",
+  "boulder_rock",
+  "biocrust",
+  "Baccharis_pilularis",
+  "Juncus_bufonius",
+  "Juncus_phaeocephalus",
+  "Eleocharis_macrostachya",
+  "Eleocharis_acicularis",
+  "Eleocharis_palustris"
+)
+
+target_veg <- veg |>
+  filter(
+    str_detect(transect_name, "GL"),
+    site == "ncos",
+    !psoc %in% exclude_other,
+    !psoc %in% native_forbs
+  )
+```
+
 
 # Plot 1: Timeseries
 ```{r}
