@@ -129,7 +129,9 @@ target_veg <- gl_explicit0 |>
   filter(
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
-  )
+  ) |> 
+# calculating mean PC
+
 ```
 
 # Visualizations 
@@ -157,7 +159,22 @@ theme_set(
 
 ## Plot 1: Timeseries
 ```{r}
+#| label: basic-timeseries
 
+# base layer
+TS_plot <- ggplot(data = target_veg,
+                                # x-axis: Date
+                                # y-axis: Mean PC
+                                mapping = aes(x = date,
+                                              y = (_),
+                                              color = psoc)) +
+  # basic geometries -----
+  # points to represent counts at each survey
+  geom_point() +
+  # lines to connect points
+  geom_line()
+
+TS_plot
 ```
 
 ## Plot 2: (_)
