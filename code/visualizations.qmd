@@ -90,7 +90,9 @@ target_veg <- veg |>
     site == "ncos",
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
-  )
+  ) |> 
+# calculating mean PC
+
 ```
 
 # Setting Plot Aesthetics
@@ -115,7 +117,22 @@ theme_set(
 
 # Plot 1: Timeseries
 ```{r}
+#| label: basic-timeseries
 
+# base layer
+basic_plot <- ggplot(data = target_veg,
+                                # x-axis: Date
+                                # y-axis: Mean P
+                                mapping = aes(x = observation_date,
+                                              y = total,
+                                              color = species)) +
+  # basic geometries -----
+  # points to represent counts at each survey
+  geom_point() +
+  # lines to connect points
+  geom_line()
+
+basic_plot
 ```
 
 # Plot 2: (_)
