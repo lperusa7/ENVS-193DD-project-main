@@ -13,7 +13,13 @@ library(cowplot)
 library(here)
 ```
 
-# Data
+```{r}
+#| label: data
+#| echo: false
+
+
+```
+
 
 # Plot 1: Timeseries
 ```{r}
