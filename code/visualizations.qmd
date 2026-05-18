@@ -120,19 +120,19 @@ theme_set(
 #| label: basic-timeseries
 
 # base layer
-basic_plot <- ggplot(data = target_veg,
+TS_plot <- ggplot(data = target_veg,
                                 # x-axis: Date
-                                # y-axis: Mean P
-                                mapping = aes(x = observation_date,
-                                              y = total,
-                                              color = species)) +
+                                # y-axis: Mean PC
+                                mapping = aes(x = date,
+                                              y = (_),
+                                              color = psoc)) +
   # basic geometries -----
   # points to represent counts at each survey
   geom_point() +
   # lines to connect points
   geom_line()
 
-basic_plot
+TS_plot
 ```
 
 # Plot 2: (_)
