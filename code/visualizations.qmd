@@ -1,13 +1,12 @@
 ---
 title: "Visualizations"
+author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
+date: "2026-05-18"
 format: pdf
 ---
 
-# 1. Set up
-
-## Packages
-
 ```{r}
+#| label: packages
 #| message: false
 #| echo: false
 
@@ -17,8 +16,6 @@ library(ggrepel)
 library(cowplot)
 library(here)
 ```
-
-## Data 
 
 ```{r}
 #| label: data
@@ -31,8 +28,6 @@ veg <- read_csv(here("data", "raw", "veg.csv"))
 metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 
 ```
-
-# 2. Wrangling Data
 
 ```{r}
 #| label: adding target species list
@@ -117,7 +112,6 @@ species_lookup <- veg |>
   arrange(psoc)
 ```
 
-
 ```{r}
 #| label: creating pools_explicit0 dataframe
 #| message: false
@@ -192,6 +186,8 @@ grasses_summary <- grasses |>
 
 ```{r}
 #| label: creating grasses transect data frame
+#| message: false
+#| echo: false
 
 # creating new object from grasses
 grasses_transect <- grasses |>
@@ -203,12 +199,10 @@ grasses_transect <- grasses |>
   ungroup()
 ```
 
-# Visualizations 
-
-## Setting Plot Aesthetics
-
 ```{r}
 #| label: plot-aesthetics
+#| message: false
+#| echo: false
 
 colors <- c(
   "#0077BB",
@@ -230,45 +224,56 @@ theme_set(
 
 ```{r}
 #| label: timeseries-plot
+#| message: false
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
 #| fig-cap: "Mean percent cover of native and non-native grasses along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events."
 
 TS_plot <- ggplot() +
   # individual transect observations as open circles
-  geom_point(data = grasses_transect,
+  geom_jitter(data = grasses_transect,
              aes(x = year, y = mean_pc, color = cover_category),
-             shape = 21, alpha = 0.4, size = 2) +
-  # ribbon showing standard error around the mean
+             shape = 21, alpha = 0.4, size = 2, width = 0.1, height = 0.1) +
+  # ribbon showing ±1 SE around the grand mean; low alpha to reduce visual noise
   geom_ribbon(data = grasses_summary,
               aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
                   fill = cover_category), alpha = 0.1) +
-  # mean line
+  # line connecting the grand means across years
   geom_line(data = grasses_summary,
             aes(x = year, y = grand_mean_pc, color = cover_category)) +
-  # mean as filled circle
+  # grand mean as filled circle
   geom_point(data = grasses_summary,
              aes(x = year, y = grand_mean_pc, color = cover_category),
              shape = 16, size = 3) +
+  # dashed line marking the prescribed burn intentional disturbance event
   geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
+  # dashed line marking the rotational grazing intentional disturbance event
   geom_vline(xintercept = 2024.5, linetype = "dashed", color = "black") +
-  # label for burn event
+  # text label for burn event; hjust pushes label right of the line
   annotate("text", x = 2023.5, y = 10,
            label = "Prescribed Burn", hjust = -0.1, size = 3.5) +
-  # label for grazing event
+  # text label for grazing event; hjust pushes label right of the line
   annotate("text", x = 2024.5, y = 10,
            label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  # setting color colors; colors must match to merge legends
   scale_color_manual(name = "Cover Type",
                    values = c("NATIVE COVER" = "#0077BB",
-                              "NON-NATIVE COVER" = "#EE7733"),
+                              "NON-NATIVE COVER" = "#EE7733"), #think about using different colors
                    labels = c("Native", "Non-native")) +
+  # setting fill colors; colors must match to merge legends
   scale_fill_manual(name = "Cover Type",
                   values = c("NATIVE COVER" = "#0077BB",
                              "NON-NATIVE COVER" = "#EE7733"),
                   labels = c("Native", "Non-native")) +
+  # labeling the axes
   labs(x = "Year",
        y = "Mean Percent Cover",
        color = "Cover Type",
-       title = "Native vs. Non-Native Grass Cover Over Time")
+       # consider dropping title since figure caption conveys the same information
+       title = "Native vs. Non-Native Grass Cover Over Time") 
 
+# displaying plot
 TS_plot
 ```
 
