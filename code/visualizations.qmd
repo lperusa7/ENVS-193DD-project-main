@@ -6,7 +6,11 @@ format: pdf
 
 # Packages
 ```{r}
-
+library(tidyverse)
+library(janitor)
+library(ggrepel)
+library(cowplot)
+library(here)
 ```
 
 # Data
