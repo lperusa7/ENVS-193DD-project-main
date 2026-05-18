@@ -8,6 +8,9 @@ format: pdf
 ## Packages
 
 ```{r}
+#| message: false
+#| echo: false
+
 library(tidyverse)
 library(janitor)
 library(ggrepel)
@@ -19,6 +22,7 @@ library(here)
 
 ```{r}
 #| label: data
+#| message: false
 #| echo: false
 
 # read in data
@@ -31,34 +35,9 @@ metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 # 2. Wrangling Data
 
 ```{r}
-#| label: creating pools_explicit0 dataframe
-
-# create a new object from veg
-gl_explicit0 <- veg |> 
-  # filter all occurrences where transect_name contains VP
-  filter(str_detect(transect_name, "GL"),
-         site == "ncos") |> 
-  # complete all possible combinations of year, pool, psoc and distance
-  complete(year, transect_name, psoc, transect_distance,
-           # fill values of percent cover with 0
-           fill = list(percent_cover = 0)
-           ) |>
-  # group by year, pool, and psoc
-  group_by(year, transect_name, psoc) |>
-  # calculate total percent cover across all quads
-  summarize(sum_pc = sum(percent_cover, na.rm = TRUE)) |>
-  # ungroup the data frame
-  ungroup() |>
-  # create a new column called year_pool from year and transect name
-  unite("year_pool", year, transect_name, remove = TRUE) |> 
-  # join with metadata data frame
-  left_join(metadata, by = "year_pool") |> 
-  # calculate mean percent cover from total percent cover/number of quadrats
-  mutate(mean_pc = sum_pc/num_quad)
-```
-
-```{r}
 #| label: adding target species list
+#| message: false
+#| echo: false
 
 poaceae_species <- c(
   "Bromus_hordeaceus",
@@ -123,14 +102,105 @@ exclude_other <- c(
 ```
 
 ```{r}
+#| label: creating species lookup
+#| message: false
+#| echo: false
+
+species_lookup <- veg |>
+  # keep only GL transects at ncos
+  filter(str_detect(transect_name, "GL"), site == "ncos") |>
+  # remove unlisted since it maps to multiple categories
+  filter(psoc != "unlisted") |>
+  # return one unique row per species-category combination
+  distinct(psoc, cover_category) |>
+  # sort alphabetically by species for readability
+  arrange(psoc)
+```
+
+
+```{r}
+#| label: creating pools_explicit0 dataframe
+#| message: false
+#| echo: false
+
+# create a new object from veg
+gl_explicit0 <- veg |> 
+  # filter all occurrences where transect_name contains VP
+  filter(str_detect(transect_name, "GL"),
+         site == "ncos") |> 
+  # not including cover_category because we will join it back after complete()
+  select(-cover_category) |> 
+  # complete all possible combinations of year, pool, psoc and distance
+  complete(year, transect_name, psoc, transect_distance,
+           # fill values of percent cover with 0
+           fill = list(percent_cover = 0)) |>
+  # group by year, pool, and psoc
+  group_by(year, transect_name, psoc) |>
+  # calculate total percent cover across all quads
+  summarize(sum_pc = sum(percent_cover, na.rm = TRUE)) |>
+  # ungroup the data frame
+  ungroup() |>
+  # create a new column called year_pool from year and transect name
+  unite("year_pool", year, transect_name, remove = TRUE) |> 
+  # join with metadata data frame
+  left_join(metadata, by = "year_pool") |> 
+  # calculate mean percent cover from total percent cover/number of quadrats
+  mutate(mean_pc = sum_pc/num_quad) |> 
+  # re-attach cover_category from lookup using psoc as key
+  left_join(species_lookup, by = "psoc")
+```
+
+```{r}
 #| label: creating target_veg data frame
+#| message: false
+#| echo: false
 
 target_veg <- gl_explicit0 |>
   filter(
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
   ) 
+```
 
+```{r}
+#| label: creating grasses dataframe
+#| message: false
+#| echo: false
+
+# creating grasses data frame from gl_explicit0
+grasses <- gl_explicit0 |> 
+  # filtering to include poaceae grasses species
+  filter(psoc %in% poaceae_species,
+         # filtering to include only native and non-native cover categories
+         cover_category %in% c("NATIVE COVER", "NON-NATIVE COVER"))
+```
+
+```{r}
+#| label: creating grasses_summary for time series plot
+#| message: false
+#| echo: false
+
+grasses_summary <- grasses |> 
+  # grouping by year and cover category
+  group_by(year, cover_category) |> 
+  # calculating average per transect mean_pc across all transects and species within each group
+  summarise(grand_mean_pc = mean(mean_pc, na.rm = TRUE),
+            se = sd(mean_pc, na.rm = TRUE) / sqrt(n())) |> 
+  # remove grouping
+  ungroup()
+```
+
+```{r}
+#| label: creating grasses transect data frame
+
+# creating new object from grasses
+grasses_transect <- grasses |>
+  # grouping by year, transect, and conver category
+  group_by(year, transect_name, cover_category) |>
+  # calculating mean pc
+  summarize(mean_pc = mean(mean_pc, na.rm = TRUE)) |>
+  # removing groups
+  ungroup()
 ```
 
 # Visualizations 
@@ -157,21 +227,47 @@ theme_set(
 ```
 
 ## Plot 1: Timeseries
-```{r}
-#| label: basic-timeseries
 
-# base layer
-TS_plot <- ggplot(data = target_veg,
-                                # x-axis: Date
-                                # y-axis: Mean PC
-                                mapping = aes(x = date,
-                                              y = (_),
-                                              color = psoc)) +
-  # basic geometries -----
-  # points to represent counts at each survey
-  geom_point() +
-  # lines to connect points
-  geom_line()
+```{r}
+#| label: timeseries-plot
+#| fig-cap: "Mean percent cover of native and non-native grasses along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events."
+
+TS_plot <- ggplot() +
+  # individual transect observations as open circles
+  geom_point(data = grasses_transect,
+             aes(x = year, y = mean_pc, color = cover_category),
+             shape = 21, alpha = 0.4, size = 2) +
+  # ribbon showing standard error around the mean
+  geom_ribbon(data = grasses_summary,
+              aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
+                  fill = cover_category), alpha = 0.1) +
+  # mean line
+  geom_line(data = grasses_summary,
+            aes(x = year, y = grand_mean_pc, color = cover_category)) +
+  # mean as filled circle
+  geom_point(data = grasses_summary,
+             aes(x = year, y = grand_mean_pc, color = cover_category),
+             shape = 16, size = 3) +
+  geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 2024.5, linetype = "dashed", color = "black") +
+  # label for burn event
+  annotate("text", x = 2023.5, y = 10,
+           label = "Prescribed Burn", hjust = -0.1, size = 3.5) +
+  # label for grazing event
+  annotate("text", x = 2024.5, y = 10,
+           label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  scale_color_manual(name = "Cover Type",
+                   values = c("NATIVE COVER" = "#0077BB",
+                              "NON-NATIVE COVER" = "#EE7733"),
+                   labels = c("Native", "Non-native")) +
+  scale_fill_manual(name = "Cover Type",
+                  values = c("NATIVE COVER" = "#0077BB",
+                             "NON-NATIVE COVER" = "#EE7733"),
+                  labels = c("Native", "Non-native")) +
+  labs(x = "Year",
+       y = "Mean Percent Cover",
+       color = "Cover Type",
+       title = "Native vs. Non-Native Grass Cover Over Time")
 
 TS_plot
 ```
