@@ -17,6 +17,7 @@ library(here)
 #| label: data
 #| echo: false
 
+<<<<<<< HEAD
 # read in data
 veg <- read_csv(here("data", "raw", "veg.csv"))
 
@@ -91,6 +92,9 @@ target_veg <- veg |>
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
   )
+=======
+
+>>>>>>> 4ddacfb3bb19339ebcc92a3b19a0fb9a552d12fa
 ```
 
 
