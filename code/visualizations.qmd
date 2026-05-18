@@ -15,6 +15,7 @@ library(janitor)
 library(ggrepel)
 library(cowplot)
 library(here)
+library(ggtext)
 ```
 
 ```{r}
@@ -277,9 +278,88 @@ TS_plot <- ggplot() +
 TS_plot
 ```
 
-## Plot 2: (_)
-```{r}
 
+```{r}
+#| label: plot 2 wrangling
+#| message: false
+#| echo: false
+
+# creating new object from gl_explicit0
+clover <- gl_explicit0 |>
+  # filter to clover species of interest
+  filter(psoc %in% c("Melilotus_indicus", "Medicago_polymorpha"))
+```
+
+```{r}
+#| label: creating clover summary data frame
+#| message: false
+#| echo: false
+
+# creating new object from clover
+clover_summary <- clover |>
+  # grouping by year and psoc
+  group_by(year, psoc) |>
+  # calculating grand mean percent cover
+  summarize(grand_mean_pc = mean(mean_pc, na.rm = TRUE),
+            # calculating standard error
+            se = sd(mean_pc, na.rm = TRUE) / sqrt(n())) |>
+  # removing groups
+  ungroup()
+```
+
+## Plot 2: Sweet and Bur Clover Over Time
+
+```{r}
+#| label: creating clover plot
+#| message: false
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+#| fig-cap: "Mean percent cover of bur clover (*M. polymorpha*) and sweet clover (*M. indicus*) along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events. Field observations suggested *M. polymorpha* increased following the prescribed burn and *M. indicus* following sheep grazing, a pattern reflected in the monitoring data."
+
+clover_plot <- ggplot() +
+  # individual transect observations as open circles
+  geom_jitter(data = clover,
+              aes(x = year, y = mean_pc, color = psoc),
+              shape = 21, alpha = 0.4, size = 2,
+              width = 0.1, height = 0.1) +
+  # ribbon showing standard error around the grand mean
+  geom_ribbon(data = clover_summary,
+              aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
+                  fill = psoc), alpha = 0.1) +
+  # line connecting grand means across years
+  geom_line(data = clover_summary,
+            aes(x = year, y = grand_mean_pc, color = psoc)) +
+  # grand mean as filled circle
+  geom_point(data = clover_summary,
+             aes(x = year, y = grand_mean_pc, color = psoc),
+             shape = 16, size = 3) +
+  # dashed line marking prescribed burn between 2023 and 2024 surveys
+  geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
+  # dashed line marking rotational sheep grazing between 2024 and 2025 surveys
+  geom_vline(xintercept = 2024.5, linetype = "dashed", color = "black") +
+  # text label for burn event
+  annotate("text", x = 2023.5, y = 42,
+           label = "Prescribed Burn", hjust = -0.1, size = 3.5) +
+  # text label for grazing event
+  annotate("text", x = 2024.5, y = 42,
+           label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  scale_color_manual(name = "Species",
+                   values = c("Melilotus_indicus" = "#CC3311",
+                              "Medicago_polymorpha" = "#009988"),
+                   labels = c("<i>M. indicus</i> (sweet clover)", 
+                              "<i>M. polymorpha</i> (bur clover)")) +
+  scale_fill_manual(name = "Species",
+                  values = c("Melilotus_indicus" = "#CC3311",
+                             "Medicago_polymorpha" = "#009988"),
+                  labels = c("<i>M. indicus</i> (sweet clover)", 
+                             "<i>M. polymorpha</i> (bur clover)")) +
+  labs(x = "Year",
+       y = "Mean Percent Cover",
+       title = "Sweet and Bur Clover Cover Over Time") +
+  theme(legend.text = element_markdown())
+
+clover_plot
 ```
 
 ## Plot 3: (_)
