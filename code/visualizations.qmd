@@ -129,8 +129,7 @@ target_veg <- gl_explicit0 |>
   filter(
     !psoc %in% exclude_other,
     !psoc %in% native_forbs
-  ) |> 
-# calculating mean PC
+  ) 
 
 ```
 
