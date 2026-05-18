@@ -317,6 +317,7 @@ clover_summary <- clover |>
 #| fig-height: 5
 #| fig-cap: "Mean percent cover of bur clover (*M. polymorpha*) and sweet clover (*M. indicus*) along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events. Field observations suggested *M. polymorpha* increased following the prescribed burn and *M. indicus* following sheep grazing, a pattern reflected in the monitoring data."
 
+# creating new plot
 clover_plot <- ggplot() +
   # individual transect observations as open circles
   geom_jitter(data = clover,
@@ -344,21 +345,26 @@ clover_plot <- ggplot() +
   # text label for grazing event
   annotate("text", x = 2024.5, y = 42,
            label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  # setting color colors; colors must match to merge legends
   scale_color_manual(name = "Species",
                    values = c("Melilotus_indicus" = "#CC3311",
                               "Medicago_polymorpha" = "#009988"),
                    labels = c("<i>M. indicus</i> (sweet clover)", 
                               "<i>M. polymorpha</i> (bur clover)")) +
+  # setting fill colors; colors must match to merge legends
   scale_fill_manual(name = "Species",
                   values = c("Melilotus_indicus" = "#CC3311",
                              "Medicago_polymorpha" = "#009988"),
                   labels = c("<i>M. indicus</i> (sweet clover)", 
                              "<i>M. polymorpha</i> (bur clover)")) +
+  # labeling axes
   labs(x = "Year",
        y = "Mean Percent Cover",
        title = "Sweet and Bur Clover Cover Over Time") +
+  # enable HTML markdown to render in legend text to display the italic species names
   theme(legend.text = element_markdown())
 
+# displaying plot
 clover_plot
 ```
 
