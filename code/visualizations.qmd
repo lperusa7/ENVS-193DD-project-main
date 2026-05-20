@@ -360,8 +360,94 @@ clover_plot
 
 ## Plot 3: (_)
 ```{r}
+## Percent change in percent cover of focal species before and after prescribed burn
+## 2023 = pre-burn
+## 2024 = post-burn
 
+# focal species lookup table
+focal_species <- tibble(
+  psoc = c(
+    "Deinandra_fasciculata",
+    "Stipa_pulchra",
+    "Medicago_polymorpha",
+    "Melilotus_indicus",
+    "Festuca_perennis"
+  ),
+  species_label = c(
+    "D. fasciculata",
+    "S. pulchra",
+    "M. polymorpha",
+    "M. indicus",
+    "F. perennis"
+  ),
+  status = c(
+    "Native",
+    "Native",
+    "Invasive",
+    "Invasive",
+    "Invasive"
+  )
+)
+
+# check that all focal species names exist in the dataset
+veg |>
+  filter(psoc %in% focal_species$psoc) |>
+  distinct(psoc) |>
+  arrange(psoc)
+
+# pull focal species percent cover from GL transects for 2023 and 2024
+focal_cover <- gl_explicit0 |>
+  filter(
+    year %in% c(2023, 2024),
+    psoc %in% focal_species$psoc
+  ) |>
+  select(year, transect_name, psoc, mean_pc) |>
+  left_join(focal_species, by = "psoc")
+
+# calculate percent change for each transect
+# formula: ((post-burn - pre-burn) / pre-burn) * 100
+focal_change_transect <- focal_cover |>
+  pivot_wider(
+    names_from = year,
+    values_from = mean_pc,
+    names_prefix = "year_"
+  ) |>
+  mutate(
+    percent_change = ((year_2024 - year_2023) / year_2023) * 100
+  ) |>
+  # percent change is undefined when 2023 cover is zero
+  filter(
+    !is.na(percent_change),
+    is.finite(percent_change)
+  )
+
+# summarize mean percent change and standard error across transects
+focal_change_summary <- focal_change_transect |>
+  group_by(psoc, species_label, status) |>
+  summarize(
+    mean_percent_change = mean(percent_change, na.rm = TRUE),
+    se = sd(percent_change, na.rm = TRUE) / sqrt(n()),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  mutate(
+    species_label = factor(
+      species_label,
+      levels = c(
+        "D. fasciculata",
+        "S. pulchra",
+        "M. polymorpha",
+        "M. indicus",
+        "F. perennis"
+      )
+    ),
+    status = factor(status, levels = c("Native", "Invasive"))
+  )
+
+# view summary table
+focal_change_summary
 ```
+
 
 ## Plot 4: Disturbance boxplot
 
@@ -397,7 +483,5 @@ fs_boxplot <- ggplot(data = grasses_transect,
        y = "Salinity (ppt)",
        title = "Boxplot")
   
-  
-
 ```
 
