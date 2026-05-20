@@ -364,9 +364,39 @@ clover_plot
 ```
 
 ## Plot 4: Disturbance boxplot
+
 ```{r}
+#| label: creating dataframe for before and after treatment
+#| echo: false
+#| message: false
+
+# create new object
+bffire_sheep <- grasses |> 
+  filter(year %in% c("2023","2024"),
+         cover_category == "NATIVE COVER") 
+  
+
+```
+
+```{r}
+
 #creating new plot
-fs_plot <- ggplot() |> 
+fs_boxplot <- ggplot(data = grasses_transect,
+                  # x-axis: (_)
+                  # y-axis: % Cover Native Grasses
+                  # fill geometries by (before and after)
+                  mapping = aes(x = (_),
+                                y = mean_salinity_ppt,
+                                fill = site_name)) +
+  # boxplot (and narrowing width)
+  geom_boxplot(width = 0.5) +
+  # filling geometries
+  scale_fill_manual(values = site_cols) +
+  # relabelling x- and y-axes, adding title
+  labs(x = "Site",
+       y = "Salinity (ppt)",
+       title = "Boxplot")
+  
   
 
 ```
