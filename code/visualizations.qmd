@@ -225,7 +225,7 @@ TS_plot <- ggplot() +
   # individual transect observations as open circles
   geom_jitter(data = grasses_transect,
              aes(x = year, y = mean_pc, color = cover_category),
-             shape = 21, alpha = 0.4, size = 2, width = 0.1, height = 0.1) +
+             shape = 16, alpha = 0.4, size = 2, width = 0.1, height = 0.1) +
   # ribbon showing ±1 SE around the grand mean; low alpha to reduce visual noise
   geom_ribbon(data = grasses_summary,
               aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
@@ -236,7 +236,7 @@ TS_plot <- ggplot() +
   # grand mean as filled circle
   geom_point(data = grasses_summary,
              aes(x = year, y = grand_mean_pc, color = cover_category),
-             shape = 16, size = 3) +
+             shape = 18, size = 5) +
   # dashed line marking the prescribed burn intentional disturbance event
   geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
   # dashed line marking the rotational grazing intentional disturbance event
@@ -249,20 +249,24 @@ TS_plot <- ggplot() +
            label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
   # setting color colors; colors must match to merge legends
   scale_color_manual(name = "Cover Type",
-                   values = c("NATIVE COVER" = "#0077BB",
-                              "NON-NATIVE COVER" = "#EE7733"), #think about using different colors
+                   values = c("NATIVE COVER" = "#005AB5",
+                              "NON-NATIVE COVER" = "#DC3220"),
                    labels = c("Native", "Non-native")) +
   # setting fill colors; colors must match to merge legends
   scale_fill_manual(name = "Cover Type",
-                  values = c("NATIVE COVER" = "#0077BB",
-                             "NON-NATIVE COVER" = "#EE7733"),
+                  values = c("NATIVE COVER" = "#005AB5",
+                             "NON-NATIVE COVER" = "#DC3220"),
                   labels = c("Native", "Non-native")) +
   # labeling the axes
   labs(x = "Year",
        y = "Mean Percent Cover",
        color = "Cover Type",
        # consider dropping title since figure caption conveys the same information
-       title = "Native vs. Non-Native Grass Cover Over Time") 
+       title = "Native vs. Non-Native Grass Cover Over Time") +
+  # moving legend position to the top-left of figure panel
+  theme(legend.position = c(0.15, 0.82),
+        # transparent legend background so underlying data points are visible
+        legend.background = element_rect(fill = "transparent"))
 
 # displaying plot
 TS_plot
@@ -312,7 +316,7 @@ clover_plot <- ggplot() +
   # individual transect observations as open circles
   geom_jitter(data = clover,
               aes(x = year, y = mean_pc, color = psoc),
-              shape = 21, alpha = 0.4, size = 2,
+              shape = 16, alpha = 0.4, size = 2,
               width = 0.1, height = 0.1) +
   # ribbon showing standard error around the grand mean
   geom_ribbon(data = clover_summary,
@@ -324,7 +328,7 @@ clover_plot <- ggplot() +
   # grand mean as filled circle
   geom_point(data = clover_summary,
              aes(x = year, y = grand_mean_pc, color = psoc),
-             shape = 16, size = 3) +
+             shape = 18, size = 5) +
   # dashed line marking prescribed burn between 2023 and 2024 surveys
   geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
   # dashed line marking rotational sheep grazing between 2024 and 2025 surveys
@@ -337,14 +341,14 @@ clover_plot <- ggplot() +
            label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
   # setting color colors; colors must match to merge legends
   scale_color_manual(name = "Species",
-                   values = c("Melilotus_indicus" = "#CC3311",
-                              "Medicago_polymorpha" = "#009988"),
+                   values = c("Melilotus_indicus" = "#E66100",
+                              "Medicago_polymorpha" = "#5D3A9B"),
                    labels = c("<i>M. indicus</i> (sweet clover)", 
                               "<i>M. polymorpha</i> (bur clover)")) +
   # setting fill colors; colors must match to merge legends
   scale_fill_manual(name = "Species",
-                  values = c("Melilotus_indicus" = "#CC3311",
-                             "Medicago_polymorpha" = "#009988"),
+                  values = c("Melilotus_indicus" = "#E66100",
+                             "Medicago_polymorpha" = "#5D3A9B"),
                   labels = c("<i>M. indicus</i> (sweet clover)", 
                              "<i>M. polymorpha</i> (bur clover)")) +
   # labeling axes
@@ -352,7 +356,11 @@ clover_plot <- ggplot() +
        y = "Mean Percent Cover",
        title = "Sweet and Bur Clover Cover Over Time") +
   # enable HTML markdown to render in legend text to display the italic species names
-  theme(legend.text = element_markdown())
+  theme(legend.text = element_markdown(),
+        # moving legend position to the top-left of figure panel
+        legend.position = c(0.15, 0.82),
+        # transparent legend background so underlying data points are visible
+        legend.background = element_rect(fill = "transparent"))
 
 # displaying plot
 clover_plot
