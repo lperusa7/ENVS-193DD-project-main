@@ -482,21 +482,21 @@ affire_sheep <- grasses |>
 ```{r}
 
 #creating new plot
-of_boxplot <- ggplot(data = grasses_transect,
+of_boxplot <- ggplot(data = bffire_sheep,
                   # x-axis: Before/After treatment
                   # y-axis: % Cover Native Grasses
                   # fill geometries by (before and after)
                   mapping = aes(x = before_after,
-                                y = mean,
-                                fill = site_name)) +
+                                y = mean_pc,
+                                fill = before_after)) +
   # boxplot (and narrowing width)
   geom_boxplot(width = 0.5) +
   # filling geometries
-  scale_fill_manual(values = site_cols) +
+  scale_fill_manual(values = "before_after") +
   # relabelling x- and y-axes, adding title
-  labs(x = "Site",
-       y = "Salinity (ppt)",
+  labs(x = "Treatment timeframe",
+       y = "% Cover Native Grasses",
        title = "Boxplot")
-  
+of_boxplot
 ```
 
