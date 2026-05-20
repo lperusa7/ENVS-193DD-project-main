@@ -373,8 +373,11 @@ clover_plot
 
 ```
 
-## Plot 4: (_)
+## Plot 4: Disturbance boxplot
 ```{r}
+#creating new plot
+fs_plot <- ggplot() |> 
+  
 
 ```
 
