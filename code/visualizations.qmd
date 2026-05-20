@@ -359,13 +359,17 @@ clover_plot
 ```
 
 ## Plot 3: (_)
+
 ```{r}
+#| label: calculating change in mean percent cover
+#| message: false
+#| echo: false
+
 ## Change in percentage points of focal species percent cover
 ## 2023 = pre-burn
 ## 2024 = post-burn
 ## Deinandra fasciculata excluded because it had only 3 paired observations
 
-# focal species lookup table
 focal_species <- tibble(
   psoc = c(
     "Stipa_pulchra",
@@ -387,8 +391,6 @@ focal_species <- tibble(
   )
 )
 
-## Pull focal species percent cover from GL transects for 2023 and 2024
-
 focal_cover <- gl_explicit0 |>
   filter(
     year %in% c(2023, 2024),
@@ -396,9 +398,6 @@ focal_cover <- gl_explicit0 |>
   ) |>
   select(year, transect_name, psoc, mean_pc) |>
   left_join(focal_species, by = "psoc")
-
-## Calculate percentage-point change for each transect
-## Formula: post-burn percent cover - pre-burn percent cover
 
 focal_change_transect_pp <- focal_cover |>
   pivot_wider(
@@ -411,26 +410,10 @@ focal_change_transect_pp <- focal_cover |>
   ) |>
   filter(!is.na(percent_point_change))
 
-# view transect-level paired changes
-focal_change_transect_pp |>
-  select(
-    transect_name,
-    psoc,
-    species_label,
-    status,
-    year_2023,
-    year_2024,
-    percent_point_change
-  ) |>
-  arrange(psoc, transect_name)
-
-## Summarize mean percentage-point change and standard error across transects
-
 focal_change_summary_pp <- focal_change_transect_pp |>
   group_by(psoc, species_label, status) |>
   summarize(
     mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
-    se = sd(percent_point_change, na.rm = TRUE) / sqrt(n()),
     n = n(),
     .groups = "drop"
   ) |>
@@ -447,24 +430,18 @@ focal_change_summary_pp <- focal_change_transect_pp |>
     status = factor(status, levels = c("Native", "Invasive"))
   )
 
-# view summary table
 focal_change_summary_pp
+```
 
-## Plot change in percentage-point cover
+
+```{r}
+#| label: plotting change in mean percent cover
 
 percent_point_cover_change_plot <- ggplot(
   focal_change_summary_pp,
   aes(x = species_label, y = mean_percent_point_change, fill = status)
 ) +
   geom_col(width = 0.6) +
-  geom_errorbar(
-    aes(
-      ymin = mean_percent_point_change - se,
-      ymax = mean_percent_point_change + se
-    ),
-    width = 0.15,
-    color = "gray40"
-  ) +
   geom_hline(
     yintercept = 0,
     color = "gray50"
@@ -474,8 +451,8 @@ percent_point_cover_change_plot <- ggplot(
       label = round(mean_percent_point_change, 2),
       y = if_else(
         mean_percent_point_change >= 0,
-        mean_percent_point_change + se + 0.5,
-        mean_percent_point_change - se - 0.5
+        mean_percent_point_change + 0.5,
+        mean_percent_point_change - 0.5
       )
     ),
     size = 4,
@@ -491,8 +468,7 @@ percent_point_cover_change_plot <- ggplot(
     title = "Change in Mean Percent Cover of Key Species Post-burn",
     x = "Species",
     y = "Change in Mean Percent Cover\n(percentage points)",
-    fill = NULL,
-    
+    fill = NULL
   ) +
   theme_bw() +
   theme(
@@ -507,11 +483,7 @@ percent_point_cover_change_plot <- ggplot(
       face = "italic"
     ),
     axis.text.y = element_text(size = 12),
-    legend.position = "right",
-    plot.caption = element_text(
-      size = 11,
-      hjust = 0
-    )
+    legend.position = "right"
   )
 
 percent_point_cover_change_plot
