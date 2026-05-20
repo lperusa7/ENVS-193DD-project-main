@@ -436,6 +436,8 @@ focal_change_summary_pp
 
 ```{r}
 #| label: plotting change in mean percent cover
+#| message: false
+#| echo: false
 
 percent_point_cover_change_plot <- ggplot(
   focal_change_summary_pp,
@@ -448,11 +450,11 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   geom_text(
     aes(
-      label = round(mean_percent_point_change, 2),
+      label = round(mean_percent_point_change, 0),
       y = if_else(
         mean_percent_point_change >= 0,
-        mean_percent_point_change + 0.5,
-        mean_percent_point_change - 0.5
+        mean_percent_point_change + 0.9,
+        mean_percent_point_change - 0.9
       )
     ),
     size = 4,
@@ -460,8 +462,8 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   scale_fill_manual(
     values = c(
-      "Native" = "#5599AA",
-      "Invasive" = "#EE1C14"
+      "Native" = "#005AB5",
+      "Invasive" = "#DC3220"
     )
   ) +
   labs(
