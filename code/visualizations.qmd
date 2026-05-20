@@ -525,30 +525,7 @@ percent_point_cover_change_plot
 #| echo: false
 #| message: false
 
-# create new object
-bffire_sheep <- grasses_transect |> 
-  filter(year %in% c("2023","2024"),
-         cover_category == "NATIVE COVER") |> 
-  group_by(transect_name, year) |> 
-  mutate(before_after = factor(
-    ifelse(year == 2023, "Before", "After"),
-    levels = c("Before", "After")
-  ))
-  
-#create new object
-affire_sheep <- grasses_transect |> 
-    filter(year %in% c("2023","2025"),
-         cover_category == "NATIVE COVER") |> 
-  group_by(transect_name, year) |> 
-  mutate(before_after = factor(
-    ifelse(year == 2023, "Before", "After"),
-    levels = c("Before", "After")
-  ))
-```
 
-
-
-```{r}
 # create new object
 nfs <- grasses_transect |> 
   filter(year %in% c("2023","2024","2025"),
@@ -582,6 +559,8 @@ treatments_bp <- ggplot(data = nfs,
                                 fill = before_after)) +
   # boxplot (and narrowing width)
   geom_boxplot(width = 0.5) +
+  # layer 3: jitter 
+  geom_jitter(width = 0.2, alpha = 0.4)+
   # filling geometries
   scale_fill_manual(values = c("Sheep" = "#7fbfff", "Fire" = "#ff8c42", "No Treatment" = "#228B22" )) +
   # relabelling x- and y-axes, adding title
