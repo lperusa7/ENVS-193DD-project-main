@@ -526,7 +526,7 @@ percent_point_cover_change_plot
 #| message: false
 
 # create new object
-bffire_sheep <- grasses |> 
+bffire_sheep <- grasses_transect |> 
   filter(year %in% c("2023","2024"),
          cover_category == "NATIVE COVER") |> 
   group_by(transect_name, year) |> 
@@ -536,7 +536,7 @@ bffire_sheep <- grasses |>
   ))
   
 #create new object
-affire_sheep <- grasses |> 
+affire_sheep <- grasses_transect |> 
     filter(year %in% c("2023","2025"),
          cover_category == "NATIVE COVER") |> 
   group_by(transect_name, year) |> 
@@ -549,6 +549,8 @@ affire_sheep <- grasses |>
 
 
 ```{r}
+#| label: boxplot creation
+
 
 #creating new plot
 of_boxplot <- ggplot(data = bffire_sheep,
@@ -561,11 +563,15 @@ of_boxplot <- ggplot(data = bffire_sheep,
   # boxplot (and narrowing width)
   geom_boxplot(width = 0.5) +
   # filling geometries
-  scale_fill_manual(values = "before_after") +
+  scale_fill_manual(values = c("Before" = "#7fbfff", "After" = "#ff8c42")) +
   # relabelling x- and y-axes, adding title
   labs(x = "Treatment timeframe",
        y = "% Cover Native Grasses",
        title = "Boxplot")
+
 of_boxplot
+
+
+
 ```
 
