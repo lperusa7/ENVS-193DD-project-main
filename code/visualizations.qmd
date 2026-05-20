@@ -585,9 +585,13 @@ treatments_bp <- ggplot(data = nfs,
   # filling geometries
   scale_fill_manual(values = c("Sheep" = "#7fbfff", "Fire" = "#ff8c42", "No Treatment" = "#228B22" )) +
   # relabelling x- and y-axes, adding title
-  labs(x = "Treatment timeframe",
+  labs(x = "Treatment Type",
        y = "% Cover Native Grasses",
-       title = "Treatment boxplots")
+       title = "Mean % Cover by Treatment Type 2021-2025") +
+  # theme
+  theme_bw()+
+  # remove legend from theme
+  theme(legend.position = "none")
 
 treatments_bp
 
