@@ -571,7 +571,24 @@ of_boxplot <- ggplot(data = bffire_sheep,
 
 of_boxplot
 
+#creating new plot
+ofs_boxplot <- ggplot(data = affire_sheep,
+                  # x-axis: Before/After treatment
+                  # y-axis: % Cover Native Grasses
+                  # fill geometries by (before and after)
+                  mapping = aes(x = before_after,
+                                y = mean_pc,
+                                fill = before_after)) +
+  # boxplot (and narrowing width)
+  geom_boxplot(width = 0.5) +
+  # filling geometries
+  scale_fill_manual(values = c("Before" = "#7fbfff", "After" = "#ff8c42")) +
+  # relabelling x- and y-axes, adding title
+  labs(x = "Treatment timeframe",
+       y = "% Cover Native Grasses",
+       title = "Boxplot")
 
+ofs_boxplot
 
 ```
 
