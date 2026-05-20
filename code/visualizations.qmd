@@ -492,7 +492,7 @@ percent_point_cover_change_plot <- ggplot(
     x = "Species",
     y = "Change in Mean Percent Cover\n(percentage points)",
     fill = NULL,
-    caption = "Fig. 1. Mean percentage-point change in percent cover of focal species from pre-burn 2023 to post-burn 2024 after the prescribed cultural burn. Error bars represent standard error. Blue bars represent native species and red bars represent invasive species. Deinandra fasciculata was excluded due to low paired sample size."
+    
   ) +
   theme_bw() +
   theme(
