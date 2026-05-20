@@ -459,20 +459,35 @@ focal_change_summary
 # create new object
 bffire_sheep <- grasses |> 
   filter(year %in% c("2023","2024"),
-         cover_category == "NATIVE COVER") 
+         cover_category == "NATIVE COVER") |> 
+  group_by(transect_name, year) |> 
+  mutate(before_after = factor(
+    ifelse(year == 2023, "Before", "After"),
+    levels = c("Before", "After")
+  ))
   
-
+#create new object
+affire_sheep <- grasses |> 
+    filter(year %in% c("2023","2025"),
+         cover_category == "NATIVE COVER") |> 
+  group_by(transect_name, year) |> 
+  mutate(before_after = factor(
+    ifelse(year == 2023, "Before", "After"),
+    levels = c("Before", "After")
+  ))
 ```
+
+
 
 ```{r}
 
 #creating new plot
-fs_boxplot <- ggplot(data = grasses_transect,
-                  # x-axis: (_)
+of_boxplot <- ggplot(data = grasses_transect,
+                  # x-axis: Before/After treatment
                   # y-axis: % Cover Native Grasses
                   # fill geometries by (before and after)
-                  mapping = aes(x = (_),
-                                y = mean_salinity_ppt,
+                  mapping = aes(x = before_after,
+                                y = mean,
                                 fill = site_name)) +
   # boxplot (and narrowing width)
   geom_boxplot(width = 0.5) +
