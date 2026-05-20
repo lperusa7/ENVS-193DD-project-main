@@ -444,6 +444,8 @@ focal_change_summary_pp
 
 ```{r}
 #| label: plotting change in mean percent cover
+#| message: false
+#| echo: false
 
 percent_point_cover_change_plot <- ggplot(
   focal_change_summary_pp,
@@ -456,11 +458,11 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   geom_text(
     aes(
-      label = round(mean_percent_point_change, 2),
+      label = round(mean_percent_point_change, 0),
       y = if_else(
         mean_percent_point_change >= 0,
-        mean_percent_point_change + 0.5,
-        mean_percent_point_change - 0.5
+        mean_percent_point_change + 0.9,
+        mean_percent_point_change - 0.9
       )
     ),
     size = 4,
@@ -468,8 +470,8 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   scale_fill_manual(
     values = c(
-      "Native" = "#5599AA",
-      "Invasive" = "#EE1C14"
+      "Native" = "#005AB5",
+      "Invasive" = "#DC3220"
     )
   ) +
   labs(
@@ -505,30 +507,7 @@ percent_point_cover_change_plot
 #| echo: false
 #| message: false
 
-# create new object
-bffire_sheep <- grasses_transect |> 
-  filter(year %in% c("2023","2024"),
-         cover_category == "NATIVE COVER") |> 
-  group_by(transect_name, year) |> 
-  mutate(before_after = factor(
-    ifelse(year == 2023, "Before", "After"),
-    levels = c("Before", "After")
-  ))
-  
-#create new object
-affire_sheep <- grasses_transect |> 
-    filter(year %in% c("2023","2025"),
-         cover_category == "NATIVE COVER") |> 
-  group_by(transect_name, year) |> 
-  mutate(before_after = factor(
-    ifelse(year == 2023, "Before", "After"),
-    levels = c("Before", "After")
-  ))
-```
 
-
-
-```{r}
 # create new object
 nfs <- grasses_transect |> 
   filter(year %in% c("2023","2024","2025"),
@@ -560,10 +539,14 @@ treatments_bp <- ggplot(data = nfs,
                   mapping = aes(x = before_after,
                                 y = mean_pc,
                                 fill = before_after)) +
+  # layer 3: jitter 
+  geom_jitter(width = 0.2, alpha=1.0, color = "#5D3A9B")+
   # boxplot (and narrowing width)
   geom_boxplot(width = 0.5) +
   # filling geometries
-  scale_fill_manual(values = c("Sheep" = "#7fbfff", "Fire" = "#ff8c42", "No Treatment" = "#228B22" )) +
+  scale_fill_manual(values = c("No Treatment" = "#E1Be6A",
+                               "Fire" = "#E66100",
+                               "Sheep" = "#1A85FF")) +
   # relabelling x- and y-axes, adding title
   labs(x = "Treatment Type",
        y = "% Cover Native Grasses",
