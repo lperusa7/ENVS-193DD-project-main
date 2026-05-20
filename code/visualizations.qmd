@@ -360,21 +360,20 @@ clover_plot
 
 ## Plot 3: (_)
 ```{r}
-## Percent change in percent cover of focal species before and after prescribed burn
+## Change in percentage points of focal species percent cover
 ## 2023 = pre-burn
 ## 2024 = post-burn
+## Deinandra fasciculata excluded because it had only 3 paired observations
 
 # focal species lookup table
 focal_species <- tibble(
   psoc = c(
-    "Deinandra_fasciculata",
     "Stipa_pulchra",
     "Medicago_polymorpha",
     "Melilotus_indicus",
     "Festuca_perennis"
   ),
   species_label = c(
-    "D. fasciculata",
     "S. pulchra",
     "M. polymorpha",
     "M. indicus",
@@ -382,20 +381,14 @@ focal_species <- tibble(
   ),
   status = c(
     "Native",
-    "Native",
     "Invasive",
     "Invasive",
     "Invasive"
   )
 )
 
-# check that all focal species names exist in the dataset
-veg |>
-  filter(psoc %in% focal_species$psoc) |>
-  distinct(psoc) |>
-  arrange(psoc)
+## Pull focal species percent cover from GL transects for 2023 and 2024
 
-# pull focal species percent cover from GL transects for 2023 and 2024
 focal_cover <- gl_explicit0 |>
   filter(
     year %in% c(2023, 2024),
@@ -404,29 +397,40 @@ focal_cover <- gl_explicit0 |>
   select(year, transect_name, psoc, mean_pc) |>
   left_join(focal_species, by = "psoc")
 
-# calculate percent change for each transect
-# formula: ((post-burn - pre-burn) / pre-burn) * 100
-focal_change_transect <- focal_cover |>
+## Calculate percentage-point change for each transect
+## Formula: post-burn percent cover - pre-burn percent cover
+
+focal_change_transect_pp <- focal_cover |>
   pivot_wider(
     names_from = year,
     values_from = mean_pc,
     names_prefix = "year_"
   ) |>
   mutate(
-    percent_change = ((year_2024 - year_2023) / year_2023) * 100
+    percent_point_change = year_2024 - year_2023
   ) |>
-  # percent change is undefined when 2023 cover is zero
-  filter(
-    !is.na(percent_change),
-    is.finite(percent_change)
-  )
+  filter(!is.na(percent_point_change))
 
-# summarize mean percent change and standard error across transects
-focal_change_summary <- focal_change_transect |>
+# view transect-level paired changes
+focal_change_transect_pp |>
+  select(
+    transect_name,
+    psoc,
+    species_label,
+    status,
+    year_2023,
+    year_2024,
+    percent_point_change
+  ) |>
+  arrange(psoc, transect_name)
+
+## Summarize mean percentage-point change and standard error across transects
+
+focal_change_summary_pp <- focal_change_transect_pp |>
   group_by(psoc, species_label, status) |>
   summarize(
-    mean_percent_change = mean(percent_change, na.rm = TRUE),
-    se = sd(percent_change, na.rm = TRUE) / sqrt(n()),
+    mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
+    se = sd(percent_point_change, na.rm = TRUE) / sqrt(n()),
     n = n(),
     .groups = "drop"
   ) |>
@@ -434,7 +438,6 @@ focal_change_summary <- focal_change_transect |>
     species_label = factor(
       species_label,
       levels = c(
-        "D. fasciculata",
         "S. pulchra",
         "M. polymorpha",
         "M. indicus",
@@ -445,7 +448,73 @@ focal_change_summary <- focal_change_transect |>
   )
 
 # view summary table
-focal_change_summary
+focal_change_summary_pp
+
+## Plot change in percentage-point cover
+
+percent_point_cover_change_plot <- ggplot(
+  focal_change_summary_pp,
+  aes(x = species_label, y = mean_percent_point_change, fill = status)
+) +
+  geom_col(width = 0.6) +
+  geom_errorbar(
+    aes(
+      ymin = mean_percent_point_change - se,
+      ymax = mean_percent_point_change + se
+    ),
+    width = 0.15,
+    color = "gray40"
+  ) +
+  geom_hline(
+    yintercept = 0,
+    color = "gray50"
+  ) +
+  geom_text(
+    aes(
+      label = round(mean_percent_point_change, 2),
+      y = if_else(
+        mean_percent_point_change >= 0,
+        mean_percent_point_change + se + 0.5,
+        mean_percent_point_change - se - 0.5
+      )
+    ),
+    size = 4,
+    color = "gray30"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Native" = "#5599AA",
+      "Invasive" = "#EE1C14"
+    )
+  ) +
+  labs(
+    title = "Change in Mean Percent Cover of Key Species Post-burn",
+    x = "Species",
+    y = "Change in Mean Percent Cover\n(percentage points)",
+    fill = NULL,
+    caption = "Fig. 1. Mean percentage-point change in percent cover of focal species from pre-burn 2023 to post-burn 2024 after the prescribed cultural burn. Error bars represent standard error. Blue bars represent native species and red bars represent invasive species. Deinandra fasciculata was excluded due to low paired sample size."
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(
+      size = 18,
+      face = "bold",
+      hjust = 0.5
+    ),
+    axis.title = element_text(size = 14),
+    axis.text.x = element_text(
+      size = 13,
+      face = "italic"
+    ),
+    axis.text.y = element_text(size = 12),
+    legend.position = "right",
+    plot.caption = element_text(
+      size = 11,
+      hjust = 0
+    )
+  )
+
+percent_point_cover_change_plot
 ```
 
 
