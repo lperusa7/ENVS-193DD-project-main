@@ -142,19 +142,9 @@ gl_explicit0 <- veg |>
   # calculate mean percent cover from total percent cover/number of quadrats
   mutate(mean_pc = sum_pc/num_quad) |> 
   # re-attach cover_category from lookup using psoc as key
-  left_join(species_lookup, by = "psoc")
-```
-
-```{r}
-#| label: creating target_veg data frame
-#| message: false
-#| echo: false
-
-target_veg <- gl_explicit0 |>
-  filter(
-    !psoc %in% exclude_other,
-    !psoc %in% native_forbs
-  ) 
+  left_join(species_lookup, by = "psoc") |> 
+  # excluding "GL-11" because it was unburned
+  filter(transect_name != "GL-11")
 ```
 
 ```{r}
