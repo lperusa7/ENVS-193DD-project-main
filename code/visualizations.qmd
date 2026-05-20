@@ -517,8 +517,55 @@ percent_point_cover_change_plot <- ggplot(
 percent_point_cover_change_plot
 ```
 
-## Plot 4: (_)
+
+## Plot 4: Disturbance boxplot
+
+```{r}
+#| label: creating dataframe for before and after treatment
+#| echo: false
+#| message: false
+
+# create new object
+bffire_sheep <- grasses |> 
+  filter(year %in% c("2023","2024"),
+         cover_category == "NATIVE COVER") |> 
+  group_by(transect_name, year) |> 
+  mutate(before_after = factor(
+    ifelse(year == 2023, "Before", "After"),
+    levels = c("Before", "After")
+  ))
+  
+#create new object
+affire_sheep <- grasses |> 
+    filter(year %in% c("2023","2025"),
+         cover_category == "NATIVE COVER") |> 
+  group_by(transect_name, year) |> 
+  mutate(before_after = factor(
+    ifelse(year == 2023, "Before", "After"),
+    levels = c("Before", "After")
+  ))
+```
+
+
+
 ```{r}
 
+#creating new plot
+of_boxplot <- ggplot(data = grasses_transect,
+                  # x-axis: Before/After treatment
+                  # y-axis: % Cover Native Grasses
+                  # fill geometries by (before and after)
+                  mapping = aes(x = before_after,
+                                y = mean,
+                                fill = site_name)) +
+  # boxplot (and narrowing width)
+  geom_boxplot(width = 0.5) +
+  # filling geometries
+  scale_fill_manual(values = site_cols) +
+  # relabelling x- and y-axes, adding title
+  labs(x = "Site",
+       y = "Salinity (ppt)",
+       title = "Boxplot")
+  
 ```
 
