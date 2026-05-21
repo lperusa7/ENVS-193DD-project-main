@@ -376,7 +376,6 @@ clover_plot
 ## Change in percentage points of focal species percent cover
 ## 2023 = pre-burn
 ## 2024 = post-burn
-## Deinandra fasciculata excluded because it had only 3 paired observations
 
 focal_species <- tibble(
   psoc = c(
@@ -491,9 +490,9 @@ percent_point_cover_change_plot <- ggplot(
     guide = "none"
   ) +
   labs(
-    title = "Change in Mean Percent Cover of Key Species Post-burn",
+    title = "Change in Mean % Cover of Key Species Post-burn",
     x = "Species",
-    y = "Change in Mean Percent Cover\n(percentage points)",
+    y = "Change in Mean % Cover\n(percentage points)",
     fill = NULL
   ) +
   theme_bw() +
@@ -576,7 +575,3 @@ treatments_bp <- ggplot(data = nfs,
 treatments_bp
 
 ```
-
-## Exploratory Plot 1
-
-## Exploratory Plot 2
