@@ -1,0 +1,6 @@
+---
+title: "StoryMap: Structure Outline"
+author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
+date: "2026-05-18"
+format: pdf
+---
