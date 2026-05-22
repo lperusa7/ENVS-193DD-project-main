@@ -366,11 +366,12 @@ clover_plot <- ggplot() +
 clover_plot
 ```
 
-## Plot 3: (_)
+## Plot 3: Change in Mean Percent Cover of Key Species Diverging Bar Chart
 
 ```{r}
 #| label: calculating change in mean percent cover
 #| message: false
+#| warning: false
 #| echo: false
 
 ## Change in percentage points of focal species percent cover
@@ -436,8 +437,6 @@ focal_change_summary_pp <- focal_change_transect_pp |>
     ),
     status = factor(status, levels = c("Native", "Invasive"))
   )
-
-focal_change_summary_pp
 ```
 
 
@@ -445,6 +444,8 @@ focal_change_summary_pp
 #| label: plotting change in mean percent cover
 #| message: false
 #| echo: false
+#| fig-width: 8
+#| fig-height: 4
 
 percent_point_cover_change_plot <- ggplot(
   focal_change_summary_pp,
@@ -544,6 +545,8 @@ nfs <- grasses_transect |>
 
 ```{r}
 #| label: boxplot creation
+#| echo: false
+#| message: false
 #| fig-width: 10
 #| fig-height: 5
 
@@ -582,4 +585,87 @@ treatments_bp
 
 ## Citations
 
+### 1. Evaluating Sheep Grazing as a Strategy for Restoring the North Campus Open Space (NCOS) Grasslands (eScholarship Cheadle Center Poster)
 
+[Link to paper #1](https://escholarship.org/uc/item/9jp6r7zs)
+
+Notes:
+
+- Confirmed focal species selection; our four key species align with those identified in the poster
+- Inspired figure 3 percent change bar chart from their visualization approach
+- Adopted paired t-test framework comparing pre and post treatment mean percent cover
+- Study is site-specific to NCOS making it directly applicable to our analysis
+
+### 2. North Campus Open Space Restoration Project Monitoring Report: Year 7, December 2024
+
+[Link to paper #2](https://escholarship.org/uc/item/16p046mb)
+
+Notes:
+
+- Used for prescribed burn timing and treatment details
+- Provided site context for the Mesa (GL) perennial grassland transects
+- Primary data source for vegetation monitoring records used in analysis
+- Covers 2017-2024 monitoring period providing pre-treatment baseline context for our 2021-2025 analysis window
+- Confirms NCOS restoration scope including upland native grassland habitats relevant to our mesa transects
+
+### 3. Trajectories of vegetation-based indicators used to assess wetland restoration progress
+
+[Link to paper #3](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1890/08-1371.1)
+
+Notes:
+
+- Non-monotonic restoration trajectories -- supports native cover declining post-burn not meaning restoration is failing
+- Justifies need for longer-term monitoring to assess native grass recovery
+- Note wetland vs. grassland limitation when citing
+
+### 4. A decade-long study of repeated prescription burning in California native grassland restoration
+
+[Link to paper #4](https://onlinelibrary.wiley.com/doi/full/10.1111/rec.13939)
+
+Notes:
+
+- Directly supports prescribed burn as a restoration tool in Stipa pulchra dominated California grasslands; same species and system as our study
+- Contextualize the post-burn decline in our native grass cover; the paper shows S. pulchra recovery takes multiple years, consistent with the drop we see in 2024
+- Non-native annual grasses reduced post-burn in their study, which partially aligns with our non-native grass decline post-burn
+- Support longer-term monitoring; recovery patterns only became clear over 5+ years, reinforcing that our 2021-2025 window may not capture full recovery
+- Note that their study used repeated burns on the same plots while ours is a single burn event; acknowledge this difference when citing
+
+### 5. Evaluating Prescribed Fire Effect on Medusa Head and Other Invasive Plants in Coastal Prairie at Point Pinole
+
+[Link to paper #5](https://cdn.wildapricot.com/76181/resources/Documents/Grasslands%20Journal/Grasslands%20Articles/Research%20articles/Bartolome%20et%20al%20Fire%20Effect%20on%20Medusa%20Head_Winter%202019.pdf?version=1629934104000&Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLndpbGRhcHJpY290LmNvbS83NjE4MS9yZXNvdXJjZXMvRG9jdW1lbnRzL0dyYXNzbGFuZHMlMjBKb3VybmFsL0dyYXNzbGFuZHMlMjBBcnRpY2xlcy9SZXNlYXJjaCUyMGFydGljbGVzL0JhcnRvbG9tZSUyMGV0JTIwYWwlMjBGaXJlJTIwRWZmZWN0JTIwb24lMjBNZWR1c2ElMjBIZWFkX1dpbnRlciUyMDIwMTkucGRmP3ZlcnNpb249MTYyOTkzNDEwNDAwMCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc3OTQ3NzMxMH0sIklwQWRkcmVzcyI6eyJBV1M6U291cmNlSXAiOiIwLjAuMC4wLzAifX19XX0_&Signature=CFXo6jtgwF-Hs0EuVv26HjcxmFU-HcNid4ACqszuUeDT-kuA2eBh0NJlq3bEnGRSnVwqoKh5hc6xEWh7NlcFCkB-6ZLeWZsPD018BWjfvf-6kQIlLyWrRawJal8tmYKVq2p2ECKhNmrfzenS62HtEkn2-DunErLCJeHSwiD6Y-EWzMDniR2RAAmgo0c8S-ixY3FZfPdmqhZwk2YAwcHYyoI-UQ6gQ5BUtkQwlApaPGOEcGUavBoa5SllpVXrj0dbItmjoTWDrTqUPUEnqRlrwycKitNxzIfDB56Ga5dMELhfjY6vzZ6eNGWzY57sXHxCfSpKdE0K8LsPARub3U2b6g__&Key-Pair-Id=K27MGQSHTHAGGF)
+
+Notes:
+
+- Coastal prairie California grassland setting makes this more ecologically comparable to NCOS mesa than most burn studies
+- Stipa pulchra and Brachypodium distachyon also appear in our study providing direct species-level comparability
+- Supports prescribed burn as a management tool for invasive grasses in California coastal grasslands specifically
+- Note timing difference; their burn was conducted in June while ours was Fall 2023, which could affect results since burn timing influences which species are most impacted
+- Methodology is comparable; transect-based vegetation monitoring pre and post burn
+
+### 6. Prescribed Burn Impacts on California Coastal Prairie Seed Banks
+
+[Link to paper #6](https://bioone.org/journals/madro%c3%b1o/volume-73/issue-1/0024-9637-260004/PRESCRIBED-BURN-IMPACTS-ON-CALIFORNIA-COASTAL-PRAIRIE-SEED-BANKS/10.3120/0024-9637-260004.full)
+
+Notes:
+
+- Central Coast California coastal prairie setting is directly comparable to NCOS mesa; strongest geographic match of any paper so far
+- Supports the finding that single prescribed burns are insufficient to reduce non-native grass abundance; contextualizes why we still see high non-native cover post-burn in our data
+- Fall 2024 sampling timeline overlaps directly with our post-burn monitoring period
+- Contextualizes the mixed burn effects we see; non-native grasses not declining as expected is consistent with their findings
+- The point that non-native plants colonize disturbed landscapes faster than natives supports the post-burn increase we see in clover species
+- Note that their study focuses on seed banks while ours measures above-ground percent cover; complementary approaches to the same question
+- Useful for introducing prescribed burn management context in our background/introduction section
+
+### 7. Grazing and Fire Management for Native Perennial Grass Restoration in California Grasslands
+
+[Link to paper #7](https://ucanr.edu/sites/default/files/2010-09/51815.pdf)
+
+Notes:
+
+- Directly addresses combined grazing and prescribed fire as restoration tools for native perennial grass restoration in California grasslands; most directly relevant to our previous dual treatment design
+- Cite to support the use of sheep grazing to reduce invasive annual grass seed banks and thatch, directly applicable to NCOS grazing treatment rationale
+- Stipa pulchra is a focal species in this paper; supports our use of it as a native grass indicator
+- Notes that perennial grasses show reduced seed production the first year post-fire but recover by year two or three; contextualizes our 2024 post-burn S. pulchra decline as an expected short-term response
+- Recommends burning every third or fourth year since non-native annual grass composition returns to pre-fire status in about three years; useful for discussing management implications
+- Seeding of annual clover noted as potentially compatible with established perennials but competitive effects on native seedlings unknown; directly relevant to our clover increase post-treatment
+- Cite in methods/discussion to justify the combined burn and grazing treatment approach used at NCOS
