@@ -485,7 +485,7 @@ percent_point_cover_change_plot <- ggplot(
     yintercept = 0,
     color = "gray50"
   ) +
-  # add roundd mean percent point change labels above or below columns
+  # add rounded mean percent point change labels above or below columns
   geom_text(
     aes(
       label = round(mean_percent_point_change, 0),
