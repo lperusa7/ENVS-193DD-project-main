@@ -1,0 +1,271 @@
+---
+title: "Percent Change T-test"
+author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
+date: "2026-05-18"
+format: pdf
+---
+
+# Set up
+
+```{r}
+#| label: packages
+#| message: false
+#| echo: true
+
+library(tidyverse)
+library(janitor)
+library(ggrepel)
+library(cowplot)
+library(here)
+library(ggtext)
+library(flextable)
+```
+
+```{r}
+#| label: data
+#| message: false
+#| echo: true
+
+# read in data
+veg <- read_csv(here("data", "raw", "veg.csv"))
+
+metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
+
+```
+
+## Creating gl_explicit0
+
+```{r}
+#| label: adding target species list
+#| message: false
+#| echo: true
+
+poaceae_species <- c(
+  "Bromus_hordeaceus",
+  "Festuca_perennis",
+  "Stipa_pulchra",
+  "Polypogon_monspeliensis",
+  "Brachypodium_distachyon",
+  "Festuca_myuros",
+  "Avena_barbata",
+  "Hordeum_marinum",
+  "Avena_fatua",
+  "Parapholis_incurva",
+  "Bromus_diandrus",
+  "Distichlis_spicata",
+  "Bromus_catharticus",
+  "Hordeum_murinum",
+  "Hordeum_brachyantherum_brachy.",
+  "Polypogon_viridis",
+  "Cortaderia_selloana",
+  "Festuca_bromoides",
+  "Cynodon_dactylon",
+  "Poa_annua",
+  "Festuca_microstachys",
+  "Crypsis_schoenoides",
+  "Polypogon_interruptus",
+  "Hordeum_brachyantherum",
+  "Bromus_madritensis",
+  "Elymus_triticoides"
+)
+
+native_forbs <- c(
+  "Plantago_erecta",
+  "Sisyrinchium_bellum",
+  "Sidalcea_malviflora",
+  "Eryngium_vaseyi",
+  "Acmispon_maritimus",
+  "Acmispon_wrangelianus",
+  "Madia_sativa",
+  "Psilocarphus_tennulus",
+  "Psilocarphus_brevissimus",
+  "Spergularia_macrotheca",
+  "Centromadia_parryi_australis",
+  "Lepidium_nitidum",
+  "Stebbinsoseris_heterocarpa",
+  "Laennecia_coulteri"
+)
+
+exclude_other <- c(
+  "Bare Ground",
+  "Natural Thatch",
+  "unlisted",
+  "moss",
+  "boulder_rock",
+  "biocrust",
+  "Baccharis_pilularis",
+  "Juncus_bufonius",
+  "Juncus_phaeocephalus",
+  "Eleocharis_macrostachya",
+  "Eleocharis_acicularis",
+  "Eleocharis_palustris"
+)
+```
+
+```{r}
+#| label: creating species lookup
+#| message: false
+#| echo: true
+
+species_lookup <- veg |>
+  # keep only GL transects at ncos
+  filter(str_detect(transect_name, "GL"), site == "ncos") |>
+  # remove unlisted since it maps to multiple categories
+  filter(psoc != "unlisted") |>
+  # return one unique row per species-category combination
+  distinct(psoc, cover_category) |>
+  # sort alphabetically by species for readability
+  arrange(psoc)
+```
+
+```{r}
+#| label: creating pools_explicit0 dataframe
+#| message: false
+#| echo: true
+
+# create a new object from veg
+gl_explicit0 <- veg |> 
+  # filter all occurrences where transect_name contains VP
+  filter(str_detect(transect_name, "GL"),
+         site == "ncos") |> 
+  # not including cover_category because we will join it back after complete()
+  select(-cover_category) |> 
+  # complete all possible combinations of year, pool, psoc and distance
+  complete(year, transect_name, psoc, transect_distance,
+           # fill values of percent cover with 0
+           fill = list(percent_cover = 0)) |>
+  # group by year, pool, and psoc
+  group_by(year, transect_name, psoc) |>
+  # calculate total percent cover across all quads
+  summarize(sum_pc = sum(percent_cover, na.rm = TRUE)) |>
+  # ungroup the data frame
+  ungroup() |>
+  # create a new column called year_pool from year and transect name
+  unite("year_pool", year, transect_name, remove = TRUE) |> 
+  # join with metadata data frame
+  left_join(metadata, by = "year_pool") |> 
+  # calculate mean percent cover from total percent cover/number of quadrats
+  mutate(mean_pc = sum_pc/num_quad) |> 
+  # re-attach cover_category from lookup using psoc as key
+  left_join(species_lookup, by = "psoc") |> 
+  # excluding "GL-11" because it was unburned
+  filter(transect_name != "GL-11")
+```
+
+## Creating percent change data frame
+
+```{r}
+#| label: calculating change in mean percent cover
+#| message: false
+#| echo: true
+#| warning: false
+
+## Change in percentage points of focal species percent cover
+## 2023 = pre-burn
+## 2024 = post-burn
+
+focal_species <- tibble(
+  psoc = c(
+    "Stipa_pulchra",
+    "Medicago_polymorpha",
+    "Melilotus_indicus",
+    "Festuca_perennis"
+  ),
+  species_label = c(
+    "S. pulchra",
+    "M. polymorpha",
+    "M. indicus",
+    "F. perennis"
+  ),
+  status = c(
+    "Native",
+    "Invasive",
+    "Invasive",
+    "Invasive"
+  )
+)
+
+focal_cover <- gl_explicit0 |>
+  filter(
+    year %in% c(2023, 2024),
+    psoc %in% focal_species$psoc
+  ) |>
+  select(year, transect_name, psoc, mean_pc) |>
+  left_join(focal_species, by = "psoc")
+
+focal_change_transect_pp <- focal_cover |>
+  pivot_wider(
+    names_from = year,
+    values_from = mean_pc,
+    names_prefix = "year_"
+  ) |>
+  mutate(
+    percent_point_change = year_2024 - year_2023
+  ) |>
+  filter(!is.na(percent_point_change))
+
+focal_change_summary_pp <- focal_change_transect_pp |>
+  group_by(psoc, species_label, status) |>
+  summarize(
+    mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  mutate(
+    species_label = factor(
+      species_label,
+      levels = c(
+        "S. pulchra",
+        "M. polymorpha",
+        "M. indicus",
+        "F. perennis"
+      )
+    ),
+    status = factor(status, levels = c("Native", "Invasive"))
+  )
+```
+
+# 1. Mean Percent Cover T-test 
+
+```{r}
+#| label: calculating and storing t-test result in flextable
+#| message: false
+#| echo: false
+#| warning: false
+#| tbl-cap: "Paired t-test results comparing mean percent cover of four focal species before (2023) and after (2024) the prescribed burn along Mesa (GL) transects at NCOS (n = 7 transects). Significant p-values (p < 0.05) are bolded. Tests were conducted without correction for multiple comparisons."
+
+focal_t_test_results <- focal_change_transect_pp |>
+  group_by(psoc, species_label) |>
+  summarize(
+    t_test = list(t.test(year_2023, year_2024, paired = TRUE))
+  ) |>
+  mutate(
+    t_stat = map_dbl(t_test, ~ .x$statistic),
+    df = map_dbl(t_test, ~ .x$parameter),
+    p_value = map_dbl(t_test, ~ .x$p.value)
+  ) |>
+  ungroup() |> 
+  select( species_label, t_stat, df, p_value)
+
+# create flextable
+focal_t_test_table <- focal_t_test_results |>
+  flextable() |>
+  # rename columns for readability
+  set_header_labels(
+    species_label = "Species",
+    t_stat = "t-statistic",
+    df = "df",
+    p_value = "p-value"
+  ) |>
+  # round numeric columns to 3 decimal places
+  colformat_double(j = c("t_stat", "p_value"), digits = 3) |>
+  # italicize species names
+  italic(j = "species_label") |>
+  # bold significant p-values
+  bold(i = ~ p_value < 0.05, j = "p_value") |>
+  # auto fit column widths
+  autofit()
+
+focal_t_test_table
+```
+

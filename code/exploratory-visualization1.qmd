@@ -1,0 +1,156 @@
+---
+title: "Exploratory Visualization 1"
+author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
+date: "2026-05-20"
+format: pdf
+---
+
+# Exploring percentage point change of grassland plots from post fire disturbance to post sheep disturbance on the NCOS Mesa
+
+```{r}
+#| label: calculating sheep grazing change in mean percent cover
+#| message: false
+#| echo: false
+
+## Change in percentage points of focal species percent cover
+## 2024 = pre-grazing
+## 2025 = post-grazing
+
+focal_species_sheep <- tibble(
+  psoc = c(
+    "Stipa_pulchra",
+    "Medicago_polymorpha",
+    "Melilotus_indicus",
+    "Festuca_perennis"
+  ),
+  species_label = c(
+    "S. pulchra",
+    "M. polymorpha",
+    "M. indicus",
+    "F. perennis"
+  ),
+  status = c(
+    "Native",
+    "Invasive",
+    "Invasive",
+    "Invasive"
+  )
+)
+
+focal_cover_sheep <- gl_explicit0 |>
+  filter(
+    year %in% c(2024, 2025),
+    psoc %in% focal_species_sheep$psoc
+  ) |>
+  select(year, transect_name, psoc, mean_pc) |>
+  left_join(focal_species_sheep, by = "psoc")
+
+focal_change_transect_sheep_pp <- focal_cover_sheep |>
+  pivot_wider(
+    names_from = year,
+    values_from = mean_pc,
+    names_prefix = "year_"
+  ) |>
+  mutate(
+    percent_point_change = year_2025 - year_2024
+  ) |>
+  filter(!is.na(percent_point_change))
+
+focal_change_summary_sheep_pp <- focal_change_transect_sheep_pp |>
+  group_by(psoc, species_label, status) |>
+  summarize(
+    mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  mutate(
+    species_label = factor(
+      species_label,
+      levels = c(
+        "S. pulchra",
+        "M. polymorpha",
+        "M. indicus",
+        "F. perennis"
+      )
+    ),
+    status = factor(status, levels = c("Native", "Invasive"))
+  )
+
+focal_change_summary_sheep_pp
+```
+
+```{r}
+#| label: plotting sheep grazing change in mean percent cover
+#| message: false
+#| echo: false
+
+percent_point_cover_change_sheep_plot <- ggplot(
+  focal_change_summary_sheep_pp,
+  aes(x = species_label, y = mean_percent_point_change, fill = status)
+) +
+  geom_col(width = 0.6) +
+  geom_jitter(
+    data = focal_change_transect_sheep_pp,
+    aes(x = species_label, y = percent_point_change, color = status),
+    width = 0.08,
+    height = 0,
+    size = 2,
+    alpha = 0.6,
+    inherit.aes = FALSE
+  ) +
+  geom_hline(
+    yintercept = 0,
+    color = "gray50"
+  ) +
+  geom_text(
+    aes(
+      label = round(mean_percent_point_change, 0),
+      y = if_else(
+        mean_percent_point_change >= 0,
+        mean_percent_point_change + 2,
+        mean_percent_point_change - 2
+      )
+    ),
+    size = 5,
+    color = "black"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Invasive" = "#DC3220"
+    )
+  ) +
+  scale_color_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Invasive" = "#DC3220"
+    ),
+    guide = "none"
+  ) +
+  labs(
+    title = "Change in Mean % Cover of Key Species Post-grazing",
+    x = "Species",
+    y = "Change in Mean % Cover\n(percentage points)",
+    fill = NULL
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(
+      size = 18,
+      face = "bold",
+      hjust = 0.5
+    ),
+    axis.title = element_text(size = 14),
+    axis.text.x = element_text(
+      size = 13,
+      face = "italic"
+    ),
+    axis.text.y = element_text(size = 12),
+    legend.position = c(0.15, 0.82),
+    legend.background = element_rect(fill = "transparent")
+  )
+
+percent_point_cover_change_sheep_plot
+```
+
+
