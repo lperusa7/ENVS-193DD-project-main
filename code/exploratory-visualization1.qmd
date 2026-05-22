@@ -96,7 +96,7 @@ focal_change_summary_sheep_pp <- focal_change_transect_sheep_pp |>
 #| message: false
 #| echo: false
 #| fig-width: 8
-#| fig-height: 4
+#| fig-height: 5
 #| fig-cap: "Change in mean percent cover of four key grassland species on the NCOS Mesa from 2024, pre-grazing, to 2025, post-grazing. Bars show the average percent-point change across transects, individual points show transect-level changes, and the gray horizontal line represents no change; blue indicates the native species Stipa pulchra, while red indicates invasive species. As an exploratory visualization, this figure suggests that S. pulchra changed only slightly after grazing, while invasive species showed mixed responses, with M. polymorpha and F. perennis increasing on average and M. indicus decreasing slightly."
 
 # create a ggplot with baselayer as the calculated percent point changes

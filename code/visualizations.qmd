@@ -458,7 +458,7 @@ focal_change_summary_pp <- focal_change_transect_pp |>
 #| message: false
 #| echo: false
 #| fig-width: 8
-#| fig-height: 4
+#| fig-height: 5
 #| fig-cap: "Change in mean percent cover of four key grassland species on the NCOS Mesa from 2023, pre-burn, to 2024, one year post-burn. Bars represent the average percent-point change in cover across transects for each species, while individual points show transect-level percent-point changes; the gray horizontal line represents no change, with values above zero indicating increased cover and values below zero indicating decreased cover. Blue indicates the native species, Stipa pulchra, and red indicates invasive species: Medicago polymorpha, Melilotus indicus, and Festuca perennis. Overall, *S. pulchra* and *F. perennis* decreased after the burn, *M. indicus* increased, and *M. polymorpha* showed little average change. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way."
 
 # create a ggplot with baselayer as the calculated percent point changes
