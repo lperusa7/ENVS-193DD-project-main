@@ -114,7 +114,7 @@ species_lookup <- veg |>
 ```
 
 ```{r}
-#| label: creating pools_explicit0 dataframe
+#| label: creating explicit0 dataframe
 #| message: false
 #| echo: false
 

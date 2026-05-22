@@ -36,9 +36,10 @@ metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 # Ideas for analysis
 
 ## Questions
+
 - How does the percent cover of native grasses vary over time compared to the percent cover of exotic vegetation on the NCOS Mesa Perennial Grasslands?
-- How does intentional disturbance influence this relationship?
-- How do key individual species, including Stipa pulchra, Medicago polymorpha, Melilotus indicus, and Festuca perennis, vary in percent cover before and after intentional disturbance?
+    - How does intentional disturbance influence this relationship?
+    - How do key individual species, including *Stipa pulchra*, *Medicago polymorpha*, *Melilotus indicus*, and *Festuca perennis*, vary in percent cover before and after intentional disturbance?
 
 ## Statistical analysis
 - statistical analysis to address at least one question with at least one analysis coded and run
