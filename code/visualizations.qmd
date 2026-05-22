@@ -378,6 +378,7 @@ clover_plot
 ## 2023 = pre-burn
 ## 2024 = post-burn
 
+# creating a table for the four focal species used in this figure
 focal_species <- tibble(
   psoc = c(
     "Stipa_pulchra",
@@ -385,12 +386,14 @@ focal_species <- tibble(
     "Melilotus_indicus",
     "Festuca_perennis"
   ),
+  # shortened species labels for plotting
   species_label = c(
     "S. pulchra",
     "M. polymorpha",
     "M. indicus",
     "F. perennis"
   ),
+  # classify each species as native or invasive
   status = c(
     "Native",
     "Invasive",
@@ -399,32 +402,42 @@ focal_species <- tibble(
   )
 )
 
+# create a new object from grassland explicit 0s
 focal_cover <- gl_explicit0 |>
+  # keep only 2023 and 2024 observations for the four focal species
   filter(
     year %in% c(2023, 2024),
     psoc %in% focal_species$psoc
   ) |>
+  # keep only the columns needed for calculating change
   select(year, transect_name, psoc, mean_pc) |>
+  # add species labels and native or invasive status
   left_join(focal_species, by = "psoc")
 
+# create a new object from focal cover
 focal_change_transect_pp <- focal_cover |>
+  # convert year values into separate columns for comparison
   pivot_wider(
     names_from = year,
     values_from = mean_pc,
     names_prefix = "year_"
   ) |>
+  # subtract pre-burn cover from post-burn cover
   mutate(
     percent_point_change = year_2024 - year_2023
-  ) |>
-  filter(!is.na(percent_point_change))
+  )
 
+# create a new object from the new calculated percent point change object
 focal_change_summary_pp <- focal_change_transect_pp |>
+  # group by species and status
   group_by(psoc, species_label, status) |>
+  # calculate the mean percent point change and sample size
   summarize(
     mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
     n = n(),
     .groups = "drop"
   ) |>
+  # set plotting order for species and status categories
   mutate(
     species_label = factor(
       species_label,
@@ -446,12 +459,18 @@ focal_change_summary_pp <- focal_change_transect_pp |>
 #| echo: false
 #| fig-width: 8
 #| fig-height: 4
+#| fig-cap: "Change in mean percent cover of four key grassland species on the NCOS Mesa from 2023, pre-burn, to 2024, one year post-burn. Bars represent the average percent-point change in cover across transects for each species, while individual points show transect-level percent-point changes; the gray horizontal line represents no change, with values above zero indicating increased cover and values below zero indicating decreased cover. Blue indicates the native species, Stipa pulchra, and red indicates invasive species: Medicago polymorpha, Melilotus indicus, and Festuca perennis. Overall, *S. pulchra* and *F. perennis* decreased after the burn, *M. indicus* increased, and *M. polymorpha* showed little average change. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way."
 
+# create a ggplot with baselayer as the calculated percent point changes
 percent_point_cover_change_plot <- ggplot(
   focal_change_summary_pp,
+  # x axis = focal species, y axis = mean percent point change,
+  # fill = native or invasive status
   aes(x = species_label, y = mean_percent_point_change, fill = status)
 ) +
+  # bars show mean percent point change from 2023 to 2024
   geom_col(width = 0.6) +
+  # jittered points show transect level percent point changes
   geom_jitter(
     data = focal_change_transect_pp,
     aes(x = species_label, y = percent_point_change, color = status),
@@ -461,10 +480,12 @@ percent_point_cover_change_plot <- ggplot(
     alpha = 0.6,
     inherit.aes = FALSE
   ) +
+  # horizontal reference line at 0 showing no change between years
   geom_hline(
     yintercept = 0,
     color = "gray50"
   ) +
+  # add roundd mean percent point change labels above or below columns
   geom_text(
     aes(
       label = round(mean_percent_point_change, 0),
@@ -477,12 +498,14 @@ percent_point_cover_change_plot <- ggplot(
     size = 5,
     color = "black"
   ) +
+  # set fill colors for native and invasive bar categories
   scale_fill_manual(
     values = c(
       "Native" = "#005AB5",
       "Invasive" = "#DC3220"
     )
   ) +
+  # set point colors to match bar fill colors
   scale_color_manual(
     values = c(
       "Native" = "#005AB5",
@@ -490,13 +513,16 @@ percent_point_cover_change_plot <- ggplot(
     ),
     guide = "none"
   ) +
+  # add plot title, axis labels, and legend label
   labs(
     title = "Change in Mean % Cover of Key Species Post-burn",
     x = "Species",
     y = "Change in Mean % Cover\n(percentage points)",
     fill = NULL
   ) +
+  # non default theme
   theme_bw() +
+  # adjust title, axis, and legend appearance
   theme(
     plot.title = element_text(
       size = 18,
@@ -513,6 +539,7 @@ percent_point_cover_change_plot <- ggplot(
     legend.background = element_rect(fill = "transparent")
   )
 
+# display plot
 percent_point_cover_change_plot
 ```
 
