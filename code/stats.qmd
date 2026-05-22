@@ -24,6 +24,9 @@ library(ggtext)
 
 # table formatting
 library(flextable)
+
+# saving tables
+library(webshot2)
 ```
 
 ```{r}
@@ -298,7 +301,15 @@ focal_t_test_table <- focal_t_test_results |>
   # auto fit column widths
   autofit()
 
+focal_t_test_table <- bg(focal_t_test_table, bg = "white", part = "all")
+
 # display table
 focal_t_test_table
+```
+
+```{r}
+#| label: saving table
+
+save_as_image(focal_t_test_table, path = here("outputs", "ttest_table.png"))
 ```
 
