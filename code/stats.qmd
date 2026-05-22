@@ -12,12 +12,17 @@ format: pdf
 #| message: false
 #| echo: true
 
+# data wrangling and general use
 library(tidyverse)
 library(janitor)
+library(here)
+
+# plot enhancements
 library(ggrepel)
 library(cowplot)
-library(here)
 library(ggtext)
+
+# table formatting
 library(flextable)
 ```
 
@@ -26,9 +31,10 @@ library(flextable)
 #| message: false
 #| echo: true
 
-# read in data
+# read in veg data
 veg <- read_csv(here("data", "raw", "veg.csv"))
 
+# read in metadata
 metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 
 ```
@@ -40,6 +46,7 @@ metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 #| message: false
 #| echo: true
 
+# all grass species (Poaceae) at NCOS mesa, both native and non-native
 poaceae_species <- c(
   "Bromus_hordeaceus",
   "Festuca_perennis",
@@ -69,6 +76,7 @@ poaceae_species <- c(
   "Elymus_triticoides"
 )
 
+# native forb species to exclude from grass analysis
 native_forbs <- c(
   "Plantago_erecta",
   "Sisyrinchium_bellum",
@@ -86,6 +94,7 @@ native_forbs <- c(
   "Laennecia_coulteri"
 )
 
+# non-vegetation cover and non-target species to exclude from analysis
 exclude_other <- c(
   "Bare Ground",
   "Natural Thatch",
@@ -107,6 +116,7 @@ exclude_other <- c(
 #| message: false
 #| echo: true
 
+# creating species_lookup from veg data frame
 species_lookup <- veg |>
   # keep only GL transects at ncos
   filter(str_detect(transect_name, "GL"), site == "ncos") |>
@@ -125,12 +135,13 @@ species_lookup <- veg |>
 
 # create a new object from veg
 gl_explicit0 <- veg |> 
-  # filter all occurrences where transect_name contains VP
+  # filter all occurrences where transect_name contains GL
   filter(str_detect(transect_name, "GL"),
+         # filtering to only NCOS observations
          site == "ncos") |> 
   # not including cover_category because we will join it back after complete()
   select(-cover_category) |> 
-  # complete all possible combinations of year, pool, psoc and distance
+  # complete all possible combinations of year, transect name, psoc, and transect distance
   complete(year, transect_name, psoc, transect_distance,
            # fill values of percent cover with 0
            fill = list(percent_cover = 0)) |>
@@ -142,13 +153,13 @@ gl_explicit0 <- veg |>
   ungroup() |>
   # create a new column called year_pool from year and transect name
   unite("year_pool", year, transect_name, remove = TRUE) |> 
-  # join with metadata data frame
+  # join with metadata data frame by year_pool
   left_join(metadata, by = "year_pool") |> 
   # calculate mean percent cover from total percent cover/number of quadrats
   mutate(mean_pc = sum_pc/num_quad) |> 
   # re-attach cover_category from lookup using psoc as key
   left_join(species_lookup, by = "psoc") |> 
-  # excluding "GL-11" because it was unburned
+  # excluding "GL-11" because it was an unburned transect (not affected by prescribed burn)
   filter(transect_name != "GL-11")
 ```
 
@@ -164,6 +175,7 @@ gl_explicit0 <- veg |>
 ## 2023 = pre-burn
 ## 2024 = post-burn
 
+# define focal species with display labels and native/invasive status
 focal_species <- tibble(
   psoc = c(
     "Stipa_pulchra",
@@ -185,32 +197,43 @@ focal_species <- tibble(
   )
 )
 
+# filter gl_explicit0 to focal species and pre/post burn years only
 focal_cover <- gl_explicit0 |>
   filter(
     year %in% c(2023, 2024),
     psoc %in% focal_species$psoc
   ) |>
+  # keep only columns needed for change calculation
   select(year, transect_name, psoc, mean_pc) |>
+  # attach species labels and status from focal_species
   left_join(focal_species, by = "psoc")
 
+# calculate per-transect percentage point change from 2023 to 2024
 focal_change_transect_pp <- focal_cover |>
+  # pivot to wide format so 2023 and 2024 are separate columns
   pivot_wider(
     names_from = year,
     values_from = mean_pc,
     names_prefix = "year_"
   ) |>
+  # calculate difference in mean percent cover between years
   mutate(
     percent_point_change = year_2024 - year_2023
   ) |>
+  # remove transects missing data for either year
   filter(!is.na(percent_point_change))
 
+# aggregate to mean percentage point change per species across transects
 focal_change_summary_pp <- focal_change_transect_pp |>
+  # group by spp, spp label, and status
   group_by(psoc, species_label, status) |>
+  # calculate mean percent point change
   summarize(
     mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
     n = n(),
     .groups = "drop"
   ) |>
+  # set factor levels to control species order in plots
   mutate(
     species_label = factor(
       species_label,
@@ -221,6 +244,7 @@ focal_change_summary_pp <- focal_change_transect_pp |>
         "F. perennis"
       )
     ),
+    # set factor levels to control fill order in legend
     status = factor(status, levels = c("Native", "Invasive"))
   )
 ```
@@ -234,20 +258,28 @@ focal_change_summary_pp <- focal_change_transect_pp |>
 #| warning: false
 #| tbl-cap: "Paired t-test results comparing mean percent cover of four focal species before (2023) and after (2024) the prescribed burn along Mesa (GL) transects at NCOS (n = 7 transects). Significant p-values (p < 0.05) are bolded. Tests were conducted without correction for multiple comparisons."
 
+# run paired t-test for each species and extract key statistics
 focal_t_test_results <- focal_change_transect_pp |>
+  # group by spp and spp label
   group_by(psoc, species_label) |>
+  # calculate and store full t-test output as a list column
   summarize(
     t_test = list(t.test(year_2023, year_2024, paired = TRUE))
   ) |>
   mutate(
+    # extract t-statistic from each t-test result
     t_stat = map_dbl(t_test, ~ .x$statistic),
+    # extract degrees of freedom from each t-test result
     df = map_dbl(t_test, ~ .x$parameter),
+    # extract p-value from each t-test result
     p_value = map_dbl(t_test, ~ .x$p.value)
   ) |>
+  # removing groups
   ungroup() |> 
+  # drop psoc and t_test list column; keep only display columns
   select( species_label, t_stat, df, p_value)
 
-# create flextable
+# format results as a flextable for report output
 focal_t_test_table <- focal_t_test_results |>
   flextable() |>
   # rename columns for readability
@@ -257,7 +289,7 @@ focal_t_test_table <- focal_t_test_results |>
     df = "df",
     p_value = "p-value"
   ) |>
-  # round numeric columns to 3 decimal places
+  # round t-statistic and p-value to 3 decimal places
   colformat_double(j = c("t_stat", "p_value"), digits = 3) |>
   # italicize species names
   italic(j = "species_label") |>
@@ -266,6 +298,7 @@ focal_t_test_table <- focal_t_test_results |>
   # auto fit column widths
   autofit()
 
+# display table
 focal_t_test_table
 ```
 
