@@ -52,6 +52,21 @@ weather_clean <- weather |>
   ungroup()
 ```
 
+# Join grasses_summary with tmap
+```{r}
+precip_veg <- full_join(
+  # left
+  x = tmap, 
+  # right
+  y = grasses_summary,
+  # shared column
+  by = c("year" = "year") 
+) |> 
+  # selecting relevant columns
+  select(year, grand_mean_pc, cover_category, total_precip, se)
+```
+
+
 ## Plotting
 
 ## Total Annual Precip vs Grand Mean % Cover Native
