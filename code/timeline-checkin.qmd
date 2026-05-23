@@ -417,12 +417,12 @@ TS_plot <- ggplot() +
        color = "Cover Type",
        # consider dropping title since figure caption conveys the same information
        title = "Native vs. Non-Native Grass Cover Over Time") +
+  # adding black and white theme
+  theme_bw() +
   # moving legend position to the top-left of figure panel
   theme(legend.position = c(0.15, 0.82),
         # transparent legend background so underlying data points are visible
-        legend.background = element_rect(fill = "transparent")) +
-  # adding black and white theme
-  theme_bw()
+        legend.background = element_rect(fill = "transparent"))
 
 # displaying plot
 TS_plot
@@ -510,14 +510,14 @@ clover_plot <- ggplot() +
   labs(x = "Year",
        y = "Mean Percent Cover",
        title = "Sweet and Bur Clover Cover Over Time") +
+  # adding black and white theme
+  theme_bw() +
   # enable HTML markdown to render in legend text to display the italic species names
   theme(legend.text = element_markdown(),
         # moving legend position to the top-left of figure panel
         legend.position = c(0.15, 0.82),
         # transparent legend background so underlying data points are visible
-        legend.background = element_rect(fill = "transparent")) +
-  # adding black and white theme
-  theme_bw()
+        legend.background = element_rect(fill = "transparent"))
 
 # displaying plot
 clover_plot
