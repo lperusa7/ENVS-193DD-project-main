@@ -634,7 +634,39 @@ ggsave(
 
 ## Plot 4: Mean percent cover of native grasses after disturbance
 ```{r}
+#| label: boxplot creation
+#| echo: false
+#| message: false
+#| fig-width: 10
+#| fig-height: 5
+#| fig-cap: "Change in native mean % cover by treatment type from 2021-2024. Bars represent the average percent-point change in cover across transects for all native species. Individual points show transect level percent points; Black line represents average mean percent cover. Yellow bar indicates no treatment while orange bar indicates fire treatment. From the graph, it shows that after a disturbance like fire, native percent cover for grasses decreases at least one year post treatment. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way." 
 
+
+#creating new plot
+treatments_bp <- ggplot(data = nfs,
+                  # x-axis: Treatment Type
+                  # y-axis: % Cover Native Grasses
+                  # fill geometries by (before and after)
+                  mapping = aes(x = before_after,
+                                y = mean_pc,
+                                fill = before_after)) +
+  # layer 3: jitter 
+  geom_jitter(width = 0.2, alpha=1.0, color = "#5D3A9B")+
+  # boxplot (and narrowing width)
+  geom_boxplot(width = 0.5) +
+  # filling geometries
+  scale_fill_manual(values = c("No Treatment" = "#E1Be6A",
+                               "Fire" = "#E66100")) +
+  # relabelling x- and y-axes, adding title
+  labs(x = "Treatment Type",
+       y = "% Cover Native Grasses",
+       title = "Mean % Cover by Treatment Type 2021-2025") +
+  # theme
+  theme_bw()+
+  # remove legend from theme
+  theme(legend.position = "none")
+
+treatments_bp
 ```
 
 ## Exploratory Visualization 1: Change in mean percent cover of key species after sheep grazing
