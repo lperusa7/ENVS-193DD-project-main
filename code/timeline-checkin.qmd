@@ -634,6 +634,27 @@ ggsave(
 
 ## Plot 4: Mean percent cover of native grasses after disturbance
 ```{r}
+#| label: creating dataframe for before and after treatment
+#| echo: false
+#| message: false
+
+
+# create new object
+nfs <- grasses_transect |> 
+  filter(year %in% c("2023","2024"),
+         cover_category == "NATIVE COVER") |> 
+  group_by(transect_name, year) |> 
+  mutate(before_after = factor(
+    case_when( 
+      year == 2023 ~ "No Treatment",
+      year == 2024 ~ "Fire"
+    ),
+    levels = c("No Treatment", "Fire")
+  ))
+
+```
+
+```{r}
 #| label: boxplot creation
 #| echo: false
 #| message: false
