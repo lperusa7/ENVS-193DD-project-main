@@ -12,12 +12,21 @@ warning: false
 #| message: false
 #| echo: false
 
+# data wrangling and general use
 library(tidyverse)
 library(janitor)
+library(here)
+
+# plot enhancements
 library(ggrepel)
 library(cowplot)
-library(here)
 library(ggtext)
+
+# table formatting
+library(flextable)
+
+# saving tables
+library(webshot2)
 ```
 
 
@@ -26,9 +35,10 @@ library(ggtext)
 #| message: false
 #| echo: false
 
-# read in data
+# read in veg data
 veg <- read_csv(here("data", "raw", "veg.csv"))
 
+# read in metadata
 metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 ```
 
@@ -38,6 +48,7 @@ metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
 #| message: false
 #| echo: false
 
+# all grass species (Poaceae) at NCOS mesa, both native and non-native
 poaceae_species <- c(
   "Bromus_hordeaceus",
   "Festuca_perennis",
@@ -67,6 +78,7 @@ poaceae_species <- c(
   "Elymus_triticoides"
 )
 
+# native forb species to exclude from grass analysis
 native_forbs <- c(
   "Plantago_erecta",
   "Sisyrinchium_bellum",
@@ -84,6 +96,7 @@ native_forbs <- c(
   "Laennecia_coulteri"
 )
 
+# non-vegetation cover and non-target species to exclude from analysis
 exclude_other <- c(
   "Bare Ground",
   "Natural Thatch",
@@ -106,6 +119,7 @@ exclude_other <- c(
 #| message: false
 #| echo: false
 
+# creating data frame from veg
 species_lookup <- veg |>
   # keep only GL transects at ncos
   filter(str_detect(transect_name, "GL"), site == "ncos") |>
@@ -152,6 +166,163 @@ gl_explicit0 <- veg |>
   filter(transect_name != "GL-11")
 ```
 
+# Ideas for analysis
+
+## Questions
+
+- How does the percent cover of native grasses vary over time compared to the percent cover of exotic vegetation on the NCOS Mesa Perennial Grasslands?
+  - How does intentional disturbance influence this relationship?
+  - How do key individual species, including *Stipa pulchra*, *Medicago polymorpha*, *Melilotus indicus*, and *Festuca perennis*, vary in percent cover before and after intentional disturbance?
+
+## Statistical analysis
+- statistical analysis to address at least one question with at least one analysis coded and run
+
+```{r}
+#| label: calculating change in mean percent cover
+#| message: false
+#| echo: false
+#| warning: false
+
+## Change in percentage points of focal species percent cover
+## 2023 = pre-burn
+## 2024 = post-burn
+
+# define focal species with display labels and native/invasive status
+focal_species <- tibble(
+  psoc = c(
+    "Stipa_pulchra",
+    "Medicago_polymorpha",
+    "Melilotus_indicus",
+    "Festuca_perennis"
+  ),
+  species_label = c(
+    "S. pulchra",
+    "M. polymorpha",
+    "M. indicus",
+    "F. perennis"
+  ),
+  status = c(
+    "Native",
+    "Invasive",
+    "Invasive",
+    "Invasive"
+  )
+)
+
+# filter gl_explicit0 to focal species and pre/post burn years only
+focal_cover <- gl_explicit0 |>
+  filter(
+    year %in% c(2023, 2024),
+    psoc %in% focal_species$psoc
+  ) |>
+  # keep only columns needed for change calculation
+  select(year, transect_name, psoc, mean_pc) |>
+  # attach species labels and status from focal_species
+  left_join(focal_species, by = "psoc")
+
+# calculate per-transect percentage point change from 2023 to 2024
+focal_change_transect_pp <- focal_cover |>
+  # pivot to wide format so 2023 and 2024 are separate columns
+  pivot_wider(
+    names_from = year,
+    values_from = mean_pc,
+    names_prefix = "year_"
+  ) |>
+  # calculate difference in mean percent cover between years
+  mutate(
+    percent_point_change = year_2024 - year_2023
+  ) |>
+  # remove transects missing data for either year
+  filter(!is.na(percent_point_change))
+
+# aggregate to mean percentage point change per species across transects
+focal_change_summary_pp <- focal_change_transect_pp |>
+  # group by spp, spp label, and status
+  group_by(psoc, species_label, status) |>
+  # calculate mean percent point change
+  summarize(
+    mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  # set factor levels to control species order in plots
+  mutate(
+    species_label = factor(
+      species_label,
+      levels = c(
+        "S. pulchra",
+        "M. polymorpha",
+        "M. indicus",
+        "F. perennis"
+      )
+    ),
+    # set factor levels to control fill order in legend
+    status = factor(status, levels = c("Native", "Invasive"))
+  )
+```
+
+```{r}
+#| label: calculating and storing t-test result in flextable
+#| message: false
+#| echo: true
+#| warning: false
+#| tbl-cap: "Paired t-test results comparing mean percent cover of four focal species before (2023) and after (2024) the prescribed burn along Mesa (GL) transects at NCOS (n = 7 transects). Significant p-values (p < 0.05) are bolded. Tests were conducted without correction for multiple comparisons."
+
+# run paired t-test for each species and extract key statistics
+focal_t_test_results <- focal_change_transect_pp |>
+  # group by spp and spp label
+  group_by(psoc, species_label) |>
+  # calculate and store full t-test output as a list column
+  summarize(
+    # year_2023 and year 2024 are the mean percent cover values from respective years
+    t_test = list(t.test(year_2023, year_2024, paired = TRUE))
+  ) |>
+  mutate(
+    # extract t-statistic from each t-test result
+    t_stat = map_dbl(t_test, ~ .x$statistic),
+    # extract degrees of freedom from each t-test result
+    df = map_dbl(t_test, ~ .x$parameter),
+    # extract p-value from each t-test result
+    p_value = map_dbl(t_test, ~ .x$p.value)
+  ) |>
+  # removing groups
+  ungroup() |> 
+  # drop psoc and t_test list column; keep only display columns
+  select( species_label, t_stat, df, p_value)
+
+# format results as a flextable for report output
+focal_t_test_table <- focal_t_test_results |>
+  flextable() |>
+  # rename columns for readability
+  set_header_labels(
+    species_label = "Species",
+    t_stat = "t-statistic",
+    df = "df",
+    p_value = "p-value"
+  ) |>
+  # round t-statistic and p-value to 3 decimal places
+  colformat_double(j = c("t_stat", "p_value"), digits = 3) |>
+  # italicize species names
+  italic(j = "species_label") |>
+  # bold significant p-values
+  bold(i = ~ p_value < 0.05, j = "p_value") |>
+  # auto fit column widths
+  autofit()
+
+focal_t_test_table <- bg(focal_t_test_table, bg = "white", part = "all")
+
+# display table
+focal_t_test_table
+```
+
+# Background
+
+We assess whether the 2023 cultural burn is meeting its restoration goals of promoting native grassland species. This study may help to inform future restoration management decisions regarding intentional disturbance at NCOS and could have implications which extend to the management or ecological understanding of other coastal grassland systems. These questions are relevant because Santa Barbara coastal grasslands are fire adapted (Saglimbeni, 2024, pp. 1-2), but are now heavily affected by invasive species. Studying the NCOS burn helps show whether cultural burning can support native species like Stipa pulchra while reducing nonnative grassland invaders.
+
+
+# Visualizations
+
+## Plot 1: Native and exotic percent cover over time
 
 ```{r}
 #| label: creating grasses dataframe
@@ -181,7 +352,6 @@ grasses_summary <- grasses |>
   ungroup()
 ```
 
-
 ```{r}
 #| label: creating grasses transect data frame
 #| message: false
@@ -197,120 +367,163 @@ grasses_transect <- grasses |>
   ungroup()
 ```
 
-# Ideas for analysis
-
-## Questions
-
-- How does the percent cover of native grasses vary over time compared to the percent cover of exotic vegetation on the NCOS Mesa Perennial Grasslands?
-
-    - How does intentional disturbance influence this relationship?
-    - How do key individual species, including *Stipa pulchra*, *Medicago polymorpha*, *Melilotus indicus*, and *Festuca perennis*, vary in percent cover before and after intentional disturbance?
-
-## Statistical analysis
-- statistical analysis to address at least one question with at least one analysis coded and run
-
-
-# Background
-
-We assess whether the 2023 cultural burn is meeting its restoration goals of promoting native grassland species. This study may help to inform future restoration management decisions regarding intentional disturbance at NCOS and could have implications which extend to the management or ecological understanding of other coastal grassland systems. These questions are relevant because Santa Barbara coastal grasslands are fire adapted (Saglimbeni, 2024, pp. 1-2), but are now heavily affected by invasive species. Studying the NCOS burn helps show whether cultural burning can support native species like Stipa pulchra while reducing nonnative grassland invaders.
-
-
-# Visualizations
-
-## Plot 1: Native and exotic percent cover over time
 ```{r}
+#| label: timeseries-plot
+#| message: false
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+#| fig-cap: "Mean percent cover of native and non-native grasses along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events."
 
+TS_plot <- ggplot() +
+  # individual transect observations as open circles
+  geom_jitter(data = grasses_transect,
+             aes(x = year, y = mean_pc, color = cover_category),
+             shape = 16, alpha = 0.4, size = 2, width = 0.1, height = 0.1) +
+  # ribbon showing ±1 SE around the grand mean; low alpha to reduce visual noise
+  geom_ribbon(data = grasses_summary,
+              aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
+                  fill = cover_category), alpha = 0.1) +
+  # line connecting the grand means across years
+  geom_line(data = grasses_summary,
+            aes(x = year, y = grand_mean_pc, color = cover_category)) +
+  # grand mean as filled circle
+  geom_point(data = grasses_summary,
+             aes(x = year, y = grand_mean_pc, color = cover_category),
+             shape = 18, size = 5) +
+  # dashed line marking the prescribed burn intentional disturbance event
+  geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
+  # dashed line marking the rotational grazing intentional disturbance event
+  geom_vline(xintercept = 2024.5, linetype = "dashed", color = "black") +
+  # text label for burn event; hjust pushes label right of the line
+  annotate("text", x = 2023.5, y = 10,
+           label = "Prescribed Burn", hjust = -0.1, size = 3.5) +
+  # text label for grazing event; hjust pushes label right of the line
+  annotate("text", x = 2024.5, y = 10,
+           label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  # setting color colors; colors must match to merge legends
+  scale_color_manual(name = "Cover Type",
+                   values = c("NATIVE COVER" = "#005AB5",
+                              "NON-NATIVE COVER" = "#DC3220"),
+                   labels = c("Native", "Non-native")) +
+  # setting fill colors; colors must match to merge legends
+  scale_fill_manual(name = "Cover Type",
+                  values = c("NATIVE COVER" = "#005AB5",
+                             "NON-NATIVE COVER" = "#DC3220"),
+                  labels = c("Native", "Non-native")) +
+  # labeling the axes
+  labs(x = "Year",
+       y = "Mean Percent Cover",
+       color = "Cover Type",
+       # consider dropping title since figure caption conveys the same information
+       title = "Native vs. Non-Native Grass Cover Over Time") +
+  # moving legend position to the top-left of figure panel
+  theme(legend.position = c(0.15, 0.82),
+        # transparent legend background so underlying data points are visible
+        legend.background = element_rect(fill = "transparent")) +
+  # adding black and white theme
+  theme_bw()
+
+# displaying plot
+TS_plot
 ```
 
 ## Plot 2: Sweet and bur clover abundance over time
-```{r}
 
+```{r}
+#| label: plot 2 wrangling
+#| message: false
+#| echo: false
+
+# creating new object from gl_explicit0
+clover <- gl_explicit0 |>
+  # filter to clover species of interest
+  filter(psoc %in% c("Melilotus_indicus", "Medicago_polymorpha"))
+```
+
+```{r}
+#| label: creating clover summary data frame
+#| message: false
+#| echo: false
+
+# creating new object from clover
+clover_summary <- clover |>
+  # grouping by year and psoc
+  group_by(year, psoc) |>
+  # calculating grand mean percent cover
+  summarize(grand_mean_pc = mean(mean_pc, na.rm = TRUE),
+            # calculating standard error
+            se = sd(mean_pc, na.rm = TRUE) / sqrt(n())) |>
+  # removing groups
+  ungroup()
+```
+
+```{r}
+#| label: creating clover plot
+#| message: false
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+#| fig-cap: "Mean percent cover of bur clover (*M. polymorpha*) and sweet clover (*M. indicus*) along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events. Field observations suggested *M. polymorpha* increased following the prescribed burn and *M. indicus* following sheep grazing, a pattern reflected in the monitoring data."
+
+# creating new plot
+clover_plot <- ggplot() +
+  # individual transect observations as open circles
+  geom_jitter(data = clover,
+              aes(x = year, y = mean_pc, color = psoc),
+              shape = 16, alpha = 0.4, size = 2,
+              width = 0.1, height = 0.1) +
+  # ribbon showing standard error around the grand mean
+  geom_ribbon(data = clover_summary,
+              aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
+                  fill = psoc), alpha = 0.1) +
+  # line connecting grand means across years
+  geom_line(data = clover_summary,
+            aes(x = year, y = grand_mean_pc, color = psoc)) +
+  # grand mean as filled circle
+  geom_point(data = clover_summary,
+             aes(x = year, y = grand_mean_pc, color = psoc),
+             shape = 18, size = 5) +
+  # dashed line marking prescribed burn between 2023 and 2024 surveys
+  geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
+  # dashed line marking rotational sheep grazing between 2024 and 2025 surveys
+  geom_vline(xintercept = 2024.5, linetype = "dashed", color = "black") +
+  # text label for burn event
+  annotate("text", x = 2023.5, y = 42,
+           label = "Prescribed Burn", hjust = -0.1, size = 3.5) +
+  # text label for grazing event
+  annotate("text", x = 2024.5, y = 42,
+           label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  # setting color colors; colors must match to merge legends
+  scale_color_manual(name = "Species",
+                   values = c("Melilotus_indicus" = "#E66100",
+                              "Medicago_polymorpha" = "#5D3A9B"),
+                   labels = c("<i>M. indicus</i> (sweet clover)", 
+                              "<i>M. polymorpha</i> (bur clover)")) +
+  # setting fill colors; colors must match to merge legends
+  scale_fill_manual(name = "Species",
+                  values = c("Melilotus_indicus" = "#E66100",
+                             "Medicago_polymorpha" = "#5D3A9B"),
+                  labels = c("<i>M. indicus</i> (sweet clover)", 
+                             "<i>M. polymorpha</i> (bur clover)")) +
+  # labeling axes
+  labs(x = "Year",
+       y = "Mean Percent Cover",
+       title = "Sweet and Bur Clover Cover Over Time") +
+  # enable HTML markdown to render in legend text to display the italic species names
+  theme(legend.text = element_markdown(),
+        # moving legend position to the top-left of figure panel
+        legend.position = c(0.15, 0.82),
+        # transparent legend background so underlying data points are visible
+        legend.background = element_rect(fill = "transparent")) +
+  # adding black and white theme
+  theme_bw()
+
+# displaying plot
+clover_plot
 ```
 
 ## Plot 3: Change in mean percent cover of key species after disturbance
-```{r}
-#| label: calculating change in mean percent cover
-#| message: false
-#| warning: false
-#| echo: false
-
-## Change in percentage points of focal species percent cover
-## 2023 = pre-burn
-## 2024 = post-burn
-
-# creating a table for the four focal species used in this figure
-focal_species <- tibble(
-  psoc = c(
-    "Stipa_pulchra",
-    "Medicago_polymorpha",
-    "Melilotus_indicus",
-    "Festuca_perennis"
-  ),
-  # shortened species labels for plotting
-  species_label = c(
-    "S. pulchra",
-    "M. polymorpha",
-    "M. indicus",
-    "F. perennis"
-  ),
-  # classify each species as native or invasive
-  status = c(
-    "Native",
-    "Invasive",
-    "Invasive",
-    "Invasive"
-  )
-)
-
-# create a new object from grassland explicit 0s
-focal_cover <- gl_explicit0 |>
-  # keep only 2023 and 2024 observations for the four focal species
-  filter(
-    year %in% c(2023, 2024),
-    psoc %in% focal_species$psoc
-  ) |>
-  # keep only the columns needed for calculating change
-  select(year, transect_name, psoc, mean_pc) |>
-  # add species labels and native or invasive status
-  left_join(focal_species, by = "psoc")
-
-# create a new object from focal cover
-focal_change_transect_pp <- focal_cover |>
-  # convert year values into separate columns for comparison
-  pivot_wider(
-    names_from = year,
-    values_from = mean_pc,
-    names_prefix = "year_"
-  ) |>
-  # subtract pre-burn cover from post-burn cover
-  mutate(
-    percent_point_change = year_2024 - year_2023
-  )
-
-# create a new object from the new calculated percent point change object
-focal_change_summary_pp <- focal_change_transect_pp |>
-  # group by species and status
-  group_by(psoc, species_label, status) |>
-  # calculate the mean percent point change and sample size
-  summarize(
-    mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
-    n = n(),
-    .groups = "drop"
-  ) |>
-  # set plotting order for species and status categories
-  mutate(
-    species_label = factor(
-      species_label,
-      levels = c(
-        "S. pulchra",
-        "M. polymorpha",
-        "M. indicus",
-        "F. perennis"
-      )
-    ),
-    status = factor(status, levels = c("Native", "Invasive"))
-  )
-```
 
 ```{r}
 #| label: plotting change in mean percent cover
@@ -401,6 +614,23 @@ percent_point_cover_change_plot <- ggplot(
 # display plot
 percent_point_cover_change_plot
 ```
+
+```{r}
+#| label: saving percent change plot
+#| message: false
+#| echo: false
+
+# saving ggplot
+ggsave(
+  # file path and name
+  filename = here("outputs", "figure_4.png"),
+  plot = percent_point_cover_change_plot,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+```
+
 
 ## Plot 4: Mean percent cover of native grasses after disturbance
 ```{r}
@@ -581,6 +811,7 @@ percent_point_cover_change_sheep_plot <- ggplot(
 percent_point_cover_change_sheep_plot
 ```
 
+
 ## Exploratory Visualization 2: Effect of annual precipitation on native and invasive percent cover
 ```{r}
 
@@ -588,9 +819,9 @@ percent_point_cover_change_sheep_plot
 
 
 # Plan for elective
-- the general concept
+- The general concept is we are making an ArcGIS StoryMap presenting our NCOS Mesa vegetation analysis. The StoryMap walks through site context, the 2023 prescribed burn, methods, results, and an embedded interactive dashboard where users can explore transect photo points and a spatial percent cover heatmap across the Mesa Perennial Grassland.
 
-- a description of the progress you have made
+- The full structure is built out and mostly populated. The completed sections include site context, burn background, methods, and results with all four figures and the t-test table embedded. Remaining work includes building the ArcGIS Dashboard with photo point popups and the interpolated heatmap layer, embedding it into the StoryMap, and finalizing the discussion and references sections.
 
-- a link, photo, or some visual of your elective
+- [Link to StoryMap](https://arcg.is/1rfKbf5)
 
