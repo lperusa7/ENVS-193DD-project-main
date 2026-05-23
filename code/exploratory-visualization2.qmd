@@ -46,14 +46,19 @@ weather_clean <- weather |>
 
 # Calculating Total Mean Annual Precipitation
 ```{r}
+# new obj
  tmap <- weather_clean |>
+  # group by year
   group_by(year) |>
+  # calculate total annual precip
   summarize(total_precip = sum(prcp, na.rm = TRUE)) |> 
+  # ungroup 
   ungroup()
 ```
 
 # Join grasses_summary with tmap
 ```{r}
+# new obj
 precip_veg <- full_join(
   # left
   x = tmap, 
@@ -70,9 +75,14 @@ precip_veg <- full_join(
 
 
 ## Plotting
-
 ## Total Annual Precip vs Grand Mean % Cover Native
 ```{r}
+
+#| fig-width: 8
+#| fig-height: 4
+#| fig-cap: " Changes in grand mean percent cover for native and non-native cover categories on NCOS Mesa from 2021-2025. Individual points show grand mean percent cover for each year. Dark grey line shows trendline; blue line represents native cover; orange represents non-native cover; dotted line represents total annual precipitation. As an exploratory visualization, this figure suggests that precipitation is a factor that increases non-native percent cover while precipitation doesn't increase native percent cover."
+
+
 TAPnat <- ggplot(data = precip_veg,
        # x axis is year, y axis is grand mean % cover, color is cover category
        mapping = aes(x = year,
@@ -120,5 +130,7 @@ TAPnat <- ggplot(data = precip_veg,
   theme_bw()
 
 TAPnat
+
+
 
 ```

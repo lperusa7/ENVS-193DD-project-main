@@ -813,7 +813,123 @@ percent_point_cover_change_sheep_plot
 
 
 ## Exploratory Visualization 2: Effect of annual precipitation on native and invasive percent cover
+
 ```{r}
+#| label: data
+#| message: false
+#| echo: false
+
+weather <- read_csv(here("data", "raw", "NOAA-weather-data.csv"))
+# creating new object from weather
+weather_clean <- weather |> 
+  # cleaning column names
+  clean_names() |> 
+  # making sure date is in POSIXct format
+  mutate(date = mdy(date)) |> 
+  # selecting columns of interest
+  select(date, prcp, tmax, tmin) |> 
+  # extracting month and year from date column
+  mutate(month = month(date),
+         year = year(date)) |> 
+  # assigning water year
+  mutate(wy = case_when(
+    # when month is October or later, assign value of year + 1
+    month >= 10 ~ year + 1,
+    # when month is September or earlier, assign value of existing year
+    .default = year))
+```
+
+```{r}
+#| label: data
+#| message: false
+#| echo: false
+
+
+# new obj
+ tmap <- weather_clean |>
+  # group by year
+  group_by(year) |>
+  # calculate total annual precip
+  summarize(total_precip = sum(prcp, na.rm = TRUE)) |> 
+  # ungroup 
+  ungroup()
+```
+
+```{r}
+#| label: data
+#| message: false
+#| echo: false
+
+
+# new obj
+precip_veg <- full_join(
+  # left
+  x = tmap, 
+  # right
+  y = grasses_summary,
+  # shared column
+  by = c("year" = "year") 
+) |> 
+  # selecting relevant columns
+  select(year, grand_mean_pc, cover_category, total_precip, se) |> 
+  # remove NAs and year 2020
+  filter(!is.na(grand_mean_pc), !is.na(total_precip), year != 2020)
+```
+
+```{r}
+#| label: precip vs grand mean % cover
+#| fig-width: 8
+#| fig-height: 4
+#| fig-cap: " Changes in grand mean percent cover for native and non-native cover categories on NCOS Mesa from 2021-2025. Individual points show grand mean percent cover for each year. Dark grey line shows trendline; blue line represents native cover; orange represents non-native cover; dotted line represents total annual precipitation. As an exploratory visualization, this figure suggests that precipitation is a factor that increases non-native percent cover while precipitation doesn't increase native percent cover."
+
+
+TAPnat <- ggplot(data = precip_veg,
+       # x axis is year, y axis is grand mean % cover, color is cover category
+       mapping = aes(x = year,
+                     y = grand_mean_pc,
+                     color = cover_category)) +
+  # first layer: points for year and grand mean % cover
+  geom_point() +
+  # second layer: lines to connect points
+  geom_line() +
+  # trend line
+  geom_smooth(method = "lm", se = TRUE, aes(linetype = "Trend Line", color = "Trend Line")) +
+  # add precipitation as secondary y axis scaled to grand mean % cover range
+  geom_line(aes(y = total_precip / max(precip_veg$total_precip, na.rm = TRUE) *
+                    max(precip_veg$grand_mean_pc, na.rm = TRUE),
+                color = "Total Precipitation"),
+            linetype = "dashed") +
+  # facet wrap to display cover category
+  facet_wrap(~cover_category) +
+  # add color for cover categories, precipitation, and trend line
+  scale_color_manual(name = "Legend",
+                     values = c("NATIVE COVER" = "#005AB5",
+                                "NON-NATIVE COVER" = "#DC3220",
+                                "Total Precipitation" = "#228B22",
+                                "Trend Line" = "gray30"),
+                     labels = c("Native", "Non-native", "Total Precipitation", "Trend Line")) +
+  scale_linetype_manual(name = "Legend",
+                        values = c("Trend Line" = "solid")) +
+  # merge into one legend, suppress separate linetype legend
+  guides(color = guide_legend(override.aes = list(linetype = c("solid", "solid", "dashed", "solid"),
+                                                   shape = c(16, 16, NA, NA))),
+         linetype = "none") +
+  # dual y axes
+  scale_y_continuous(
+    name = "Grand Mean Percent Cover (%)",
+    sec.axis = sec_axis(
+      ~ . * max(precip_veg$total_precip, na.rm = TRUE) /
+            max(precip_veg$grand_mean_pc, na.rm = TRUE),
+      name = "Total Annual Precipitation (in)"
+    )
+  ) +
+  # labels
+  labs(
+    title = "Precipitation and grand mean % cover of native and nonnative cover",
+    x = "Year") +
+  theme_bw()
+
+TAPnat
 
 ```
 
