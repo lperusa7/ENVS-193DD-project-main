@@ -554,16 +554,15 @@ percent_point_cover_change_plot
 
 # create new object
 nfs <- grasses_transect |> 
-  filter(year %in% c("2023","2024","2025"),
+  filter(year %in% c("2023","2024"),
          cover_category == "NATIVE COVER") |> 
   group_by(transect_name, year) |> 
   mutate(before_after = factor(
     case_when( 
       year == 2023 ~ "No Treatment",
-      year == 2024 ~ "Fire",
-      year == 2025 ~ "Sheep"
+      year == 2024 ~ "Fire"
     ),
-    levels = c("No Treatment", "Fire", "Sheep")
+    levels = c("No Treatment", "Fire")
   ))
 
 ```
@@ -591,8 +590,7 @@ treatments_bp <- ggplot(data = nfs,
   geom_boxplot(width = 0.5) +
   # filling geometries
   scale_fill_manual(values = c("No Treatment" = "#E1Be6A",
-                               "Fire" = "#E66100",
-                               "Sheep" = "#1A85FF")) +
+                               "Fire" = "#E66100")) +
   # relabelling x- and y-axes, adding title
   labs(x = "Treatment Type",
        y = "% Cover Native Grasses",
