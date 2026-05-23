@@ -575,6 +575,8 @@ nfs <- grasses_transect |>
 #| message: false
 #| fig-width: 10
 #| fig-height: 5
+#| fig-cap: "Change in native mean % cover by treatment type from 2021-2024. Bars represent the average percent-point change in cover across transects for all native species. Individual points show transect level percent points; Black line represents average mean percent cover. Yellow bar indicates no treatment while orange bar indicates fire treatment. From the graph, it shows that after a disturbance like fire, native percent cover for grasses decreases at least one year post treatment. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way." 
+
 
 #creating new plot
 treatments_bp <- ggplot(data = nfs,
