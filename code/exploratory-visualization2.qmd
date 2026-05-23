@@ -63,7 +63,9 @@ precip_veg <- full_join(
   by = c("year" = "year") 
 ) |> 
   # selecting relevant columns
-  select(year, grand_mean_pc, cover_category, total_precip, se)
+  select(year, grand_mean_pc, cover_category, total_precip, se) |> 
+  # remove NAs and year 2020
+  filter(!is.na(grand_mean_pc), !is.na(total_precip), year != 2020)
 ```
 
 
@@ -71,17 +73,52 @@ precip_veg <- full_join(
 
 ## Total Annual Precip vs Grand Mean % Cover Native
 ```{r}
-TAPnat <- ggplot(
-  
-)
-```
+TAPnat <- ggplot(data = precip_veg,
+       # x axis is year, y axis is grand mean % cover, color is cover category
+       mapping = aes(x = year,
+                     y = grand_mean_pc,
+                     color = cover_category)) +
+  # first layer: points for year and grand mean % cover
+  geom_point() +
+  # second layer: lines to connect points
+  geom_line() +
+  # trend line
+  geom_smooth(method = "lm", se = TRUE, aes(linetype = "Trend Line", color = "Trend Line")) +
+  # add precipitation as secondary y axis scaled to grand mean % cover range
+  geom_line(aes(y = total_precip / max(precip_veg$total_precip, na.rm = TRUE) *
+                    max(precip_veg$grand_mean_pc, na.rm = TRUE),
+                color = "Total Precipitation"),
+            linetype = "dashed") +
+  # facet wrap to display cover category
+  facet_wrap(~cover_category) +
+  # add color for cover categories, precipitation, and trend line
+  scale_color_manual(name = "Legend",
+                     values = c("NATIVE COVER" = "#005AB5",
+                                "NON-NATIVE COVER" = "#DC3220",
+                                "Total Precipitation" = "#228B22",
+                                "Trend Line" = "gray30"),
+                     labels = c("Native", "Non-native", "Total Precipitation", "Trend Line")) +
+  scale_linetype_manual(name = "Legend",
+                        values = c("Trend Line" = "solid")) +
+  # merge into one legend, suppress separate linetype legend
+  guides(color = guide_legend(override.aes = list(linetype = c("solid", "solid", "dashed", "solid"),
+                                                   shape = c(16, 16, NA, NA))),
+         linetype = "none") +
+  # dual y axes
+  scale_y_continuous(
+    name = "Grand Mean Percent Cover (%)",
+    sec.axis = sec_axis(
+      ~ . * max(precip_veg$total_precip, na.rm = TRUE) /
+            max(precip_veg$grand_mean_pc, na.rm = TRUE),
+      name = "Total Annual Precipitation (in)"
+    )
+  ) +
+  # labels
+  labs(
+    title = "Precipitation and grand mean % cover of native and nonnative cover",
+    x = "Year") +
+  theme_bw()
 
-## Total Annual Precip vs Grand Mean % Non-Native Plants scatterplots (facet wrap?/patchwork)
-```{r}
-TAPnnat <- ggplot(
-  aes = 
-)
-```
+TAPnat
 
-## Add a trendline to the plots
-- y axis: native and non-native 
+```
