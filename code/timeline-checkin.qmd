@@ -2,9 +2,15 @@
 title: "Timeline Check in"
 author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
 date: "2026-05-22"
-format: pdf
 message: false
 warning: false
+format: 
+  pdf:
+    include-in-header: 
+       text: |
+         \usepackage{fvextra}
+         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+         \DefineVerbatimEnvironment{OutputCode}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
 ```{r}
@@ -623,7 +629,7 @@ percent_point_cover_change_plot
 # saving ggplot
 ggsave(
   # file path and name
-  filename = here("outputs", "figure_4.png"),
+  filename = here("outputs", "figure_3.png"),
   plot = percent_point_cover_change_plot,
   width = 8,
   height = 5,
@@ -689,6 +695,23 @@ treatments_bp <- ggplot(data = nfs,
 
 treatments_bp
 ```
+
+```{r}
+#| label: saving mean percent cover of native grasses after disturbance plot
+#| message: false
+#| echo: false
+
+# saving ggplot
+ggsave(
+  # file path and name
+  filename = here("outputs", "figure_4.png"),
+  plot = treatments_bp,
+  width = 10,
+  height = 5,
+  dpi = 300
+)
+```
+
 
 ## Exploratory Visualization 1: Change in mean percent cover of key species after sheep grazing
 ```{r}
@@ -868,7 +891,7 @@ percent_point_cover_change_sheep_plot
 ## Exploratory Visualization 2: Effect of annual precipitation on native and invasive percent cover
 
 ```{r}
-#| label: data
+#| label: reading in weather data
 #| message: false
 #| echo: false
 
@@ -893,7 +916,7 @@ weather_clean <- weather |>
 ```
 
 ```{r}
-#| label: data
+#| label: wrangling weather data
 #| message: false
 #| echo: false
 
@@ -909,7 +932,7 @@ weather_clean <- weather |>
 ```
 
 ```{r}
-#| label: data
+#| label: wrangling weather data continued
 #| message: false
 #| echo: false
 
@@ -930,9 +953,10 @@ precip_veg <- full_join(
 ```
 
 ```{r}
-#| label: precip vs grand mean % cover
+#| label: precip-vs-grand-mean-percent-cover
 #| fig-width: 8
 #| fig-height: 4
+#| echo: false
 #| fig-cap: " Changes in grand mean percent cover for native and non-native cover categories on NCOS Mesa from 2021-2025. Individual points show grand mean percent cover for each year. Dark grey line shows trendline; blue line represents native cover; orange represents non-native cover; dotted line represents total annual precipitation. As an exploratory visualization, this figure suggests that precipitation is a factor that increases non-native percent cover while precipitation doesn't increase native percent cover."
 
 
