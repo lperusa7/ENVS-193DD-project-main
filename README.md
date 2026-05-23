@@ -19,7 +19,7 @@ ENVS-193DD-project-main/
 ├── data/
 │   ├── raw/
 │   │   ├── veg.csv
-│   │   └── vp_veg_metadata.csv
+│   │   ├── vp_veg_metadata.csv
 │   │   └── NOAA-weather-data.csv
 │   └── processed/
 ├── outputs/
@@ -30,8 +30,6 @@ ENVS-193DD-project-main/
 │   └── ttest_table.png
 └── README.md
 ```
-
-## Dependencies
 
 ## Dependencies
 
