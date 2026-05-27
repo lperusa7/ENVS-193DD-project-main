@@ -601,7 +601,7 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   # non default theme
   theme_bw() +
-  # consistent theme
+  # consistent legend and axis text
   theme(
     legend.position = c(0.15, 0.82),
     legend.background = element_rect(fill = "transparent"),
@@ -855,7 +855,7 @@ percent_point_cover_change_sheep_plot <- ggplot(
   ) +
   # non default theme
   theme_bw() +
- # consistent theme
+ # consistent legend and axis text
   theme(
     legend.position = c(0.15, 0.82),
     legend.background = element_rect(fill = "transparent"),
@@ -939,54 +939,52 @@ precip_veg <- full_join(
 #| fig-cap: " Changes in grand mean percent cover for native and non-native cover categories on NCOS Mesa from 2021-2025. Individual points show grand mean percent cover for each year. Dark grey line shows trendline; blue line represents native cover; orange represents non-native cover; dotted line represents total annual precipitation. As an exploratory visualization, this figure suggests that precipitation is a factor that increases non-native percent cover while precipitation doesn't increase native percent cover."
 
 
-TAPnat <- ggplot(data = precip_veg,
-       # x axis is year, y axis is grand mean % cover, color is cover category
-       mapping = aes(x = year,
-                     y = grand_mean_pc,
-                     color = cover_category)) +
-  # first layer: points for year and grand mean % cover
-  geom_point() +
-  # second layer: lines to connect points
-  geom_line() +
-  # trend line
-  geom_smooth(method = "lm", se = TRUE, aes(linetype = "Trend Line", color = "Trend Line")) +
-  # add precipitation as secondary y axis scaled to grand mean % cover range
-  geom_line(aes(y = total_precip / max(precip_veg$total_precip, na.rm = TRUE) *
-                    max(precip_veg$grand_mean_pc, na.rm = TRUE),
-                color = "Total Precipitation"),
-            linetype = "dashed") +
-  # facet wrap to display cover category
-  facet_wrap(~cover_category) +
-  # add color for cover categories, precipitation, and trend line
-  scale_color_manual(name = "Legend",
-                     values = c("NATIVE COVER" = "#005AB5",
-                                "NON-NATIVE COVER" = "#DC3220",
-                                "Total Precipitation" = "#228B22",
-                                "Trend Line" = "gray30"),
-                     labels = c("Native", "Non-native", "Total Precipitation", "Trend Line")) +
-  scale_linetype_manual(name = "Legend",
-                        values = c("Trend Line" = "solid")) +
-  # merge into one legend, suppress separate linetype legend
-  guides(color = guide_legend(override.aes = list(linetype = c("solid", "solid", "dashed", "solid"),
-                                                   shape = c(16, 16, NA, NA))),
-         linetype = "none") +
-  # dual y axes
-  scale_y_continuous(
-    name = "Grand Mean Percent Cover (%)",
-    sec.axis = sec_axis(
-      ~ . * max(precip_veg$total_precip, na.rm = TRUE) /
-            max(precip_veg$grand_mean_pc, na.rm = TRUE),
-      name = "Total Annual Precipitation (in)"
+# create scatterplot object
+precip_cover_plot <- ggplot(
+  data = precip_veg,
+  mapping = aes(
+    # x-axis: total annual precipitation
+    x = total_precip,
+    # y-axis: grand mean percent cover
+    y = grand_mean_pc,
+    # color points and trendlines by cover type
+    color = cover_category
+  )) +
+  # add points for each year/category observation
+  geom_point(size = 2, alpha = 0.7) +
+  # add separate linear trendlines for native and non-native cover
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  ) +
+  # set colors for native and non-native cover
+  scale_color_manual(
+    name = "Cover Type",
+    values = c(
+      "NATIVE COVER" = "#005AB5",
+      "NON-NATIVE COVER" = "#DC3220"
+    ),
+    labels = c(
+      "Native",
+      "Non-native"
     )
   ) +
-  # labels
+  # add plot title and axis labels
   labs(
-    title = "Precipitation and grand mean % cover of native and nonnative cover",
-    x = "Year") +
-  theme_bw()
+    title = "Relationship Between Precipitation and Vegetation Cover",
+    x = "Total Annual Precipitation (inches)",
+    y = "Grand Mean % Cover"
+  ) +
+  # same base theme as the other plots
+  theme_bw() +
+  # consistent legend
+  theme(
+    legend.position = c(0.15, 0.82),
+    legend.background = element_rect(fill = "transparent")
+  )
 
-TAPnat
-
+# display plot
+precip_cover_plot
 ```
 
 
