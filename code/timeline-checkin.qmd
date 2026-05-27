@@ -985,7 +985,7 @@ precip_veg <- full_join(
 #| fig-width: 8
 #| fig-height: 4
 #| echo: false
-#| fig-cap: " Changes in grand mean percent cover for native and non-native cover categories on NCOS Mesa from 2021-2025. Individual points show grand mean percent cover for each year. Dark grey line shows trendline; blue line represents native cover; orange represents non-native cover; dotted line represents total annual precipitation. As an exploratory visualization, this figure suggests that precipitation is a factor that increases non-native percent cover while precipitation doesn't increase native percent cover."
+#| fig-cap: "Relationship between total annual precipitation and grand mean percent cover for native and non-native vegetation on the NCOS Mesa from 2021-2025. Individual points represent annual grand mean percent cover values for both cover types. Linear trendlines show the exploratory relationship between precipitation and cover, with blue representing native grass cover and red representing non-native vegetation cover. The trend suggests that non-native cover increased with higher precipitation, while native grass cover showed little to no positive relationship with precipitation."
 
 
 # create scatterplot object
