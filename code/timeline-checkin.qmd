@@ -547,7 +547,9 @@ percent_point_cover_change_plot <- ggplot(
   aes(x = species_label, y = mean_percent_point_change, fill = status)
 ) +
   # bars show mean percent point change from 2023 to 2024
-  geom_col(width = 0.6) +
+  geom_col(width = 0.6,
+    alpha = 0.6
+  ) +
   # jittered points show transect level percent point changes
   geom_jitter(
     data = focal_change_transect_pp,
@@ -555,7 +557,6 @@ percent_point_cover_change_plot <- ggplot(
     width = 0.08,
     height = 0,
     size = 2,
-    alpha = 0.6,
     inherit.aes = FALSE
   ) +
   # horizontal reference line at 0 showing no change between years
@@ -813,7 +814,9 @@ percent_point_cover_change_sheep_plot <- ggplot(
   aes(x = species_label, y = mean_percent_point_change, fill = status)
 ) +
   # bars show mean percent point change from 2024 to 2025
-  geom_col(width = 0.6) +
+  geom_col(width = 0.6,
+           alpha = 0.6
+  ) +
   # jittered points show transect level percent point changes
   geom_jitter(
     data = focal_change_transect_sheep_pp,
@@ -821,7 +824,6 @@ percent_point_cover_change_sheep_plot <- ggplot(
     width = 0.08,
     height = 0,
     size = 2,
-    alpha = 0.6,
     inherit.aes = FALSE
   ) +
   # horizontal reference line at 0 showing no change between years
