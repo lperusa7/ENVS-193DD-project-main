@@ -677,14 +677,11 @@ treatments_bp <- ggplot(data = nfs,
                   # fill geometries by (before and after)
                   mapping = aes(x = before_after,
                                 y = mean_pc,
-                                fill = before_after)) +
+                                )) +
   # layer 3: jitter 
-  geom_jitter(width = 0.2, alpha=1.0, color = "#5D3A9B")+
+  geom_jitter(width = 0.2, alpha=1.0, color = "gray30")+
   # boxplot (and narrowing width)
-  geom_boxplot(width = 0.5) +
-  # filling geometries
-  scale_fill_manual(values = c("No Treatment" = "#E1Be6A",
-                               "Fire" = "#E66100")) +
+  geom_boxplot(width = 0.5, fill = NA, color = "black") +
   # relabelling x- and y-axes, adding title
   labs(x = "Treatment Type",
        y = "% Cover Native Grasses",
