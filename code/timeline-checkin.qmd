@@ -635,19 +635,31 @@ ggsave(
 #| echo: false
 #| message: false
 
-
-# create new object
-nfs <- grasses_transect |> 
-  filter(year %in% c("2023","2024"),
-         cover_category == "NATIVE COVER") |> 
-  group_by(transect_name, year) |> 
-  mutate(before_after = factor(
-    case_when( 
-      year == 2023 ~ "No Treatment",
-      year == 2024 ~ "Fire"
+# create treatment data for native and non-native grass cover
+treatment_cover <- grasses_transect |> 
+  # keep only pre-burn and post-burn years
+  filter(
+    year %in% c(2023, 2024),
+    cover_category %in% c("NATIVE COVER", "NON-NATIVE COVER")
+  ) |> 
+  # create before/after treatment labels
+  mutate(
+    before_after = factor(
+      case_when( 
+        year == 2023 ~ "No Treatment",
+        year == 2024 ~ "Fire"
+      ),
+      levels = c("No Treatment", "Fire")
     ),
-    levels = c("No Treatment", "Fire")
-  ))
+    # create cleaner labels for facet panels and legend
+    cover_type = factor(
+      case_when(
+        cover_category == "NATIVE COVER" ~ "Native",
+        cover_category == "NON-NATIVE COVER" ~ "Non-native"
+      ),
+      levels = c("Native", "Non-native")
+    )
+  )
 
 ```
 
@@ -655,32 +667,69 @@ nfs <- grasses_transect |>
 #| label: boxplot creation
 #| echo: false
 #| message: false
-#| fig-width: 10
-#| fig-height: 5
-#| fig-cap: "Change in native mean % cover by treatment type from 2021-2024. Bars represent the average percent-point change in cover across transects for all native species. Individual points show transect level percent points; Black line represents average mean percent cover. Yellow bar indicates no treatment while orange bar indicates fire treatment. From the graph, it shows that after a disturbance like fire, native percent cover for grasses decreases at least one year post treatment. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way." 
+#| fig-width: 7
+#| fig-height: 6
+#| fig-cap: "Mean percent cover of native and non-native vegetation by treatment type from 2023-2024. Boxes represent variation in transect level mean percent cover before and one year after the prescribed burn. Individual points show transect-level mean percent cover, and the thick black line represents the median. Blue indicates native grass cover and red indicates non-native vegetation cover. Native grass cover was lower after fire treatment, while non-native vegetation cover showed a smaller change, suggesting that native and non-native grasses responded differently one year after disturbance."
 
+# creating new plot
+treatments_bp <- ggplot(
+  data = treatment_cover,
+  mapping = aes(
+    # x-axis: treatment type
+    x = before_after,
+    # y-axis: mean percent cover
+    y = mean_pc,
+    # fill boxes by cover type
+    fill = cover_type
+  )
+) +
+  # points show transect-level mean percent cover
+  geom_jitter(
+    aes(color = cover_type),
+    width = 0.2,
+    alpha = 1.0,
+    size = 2,
+    shape = 16
+  ) +
+  # boxplots show distribution across transects
+  geom_boxplot(
+    width = 0.5,
+    alpha = 0.6,
+    color = "black"
+  ) +
+  # stack native and non-native panels vertically
+  facet_wrap(
+    ~ cover_type,
+    ncol = 1
+  ) +
+  # set box fill colors
+  scale_fill_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Non-native" = "#DC3220"
+    )
+  ) +
+  # set point colors
+  scale_color_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Non-native" = "#DC3220"
+    )
+  ) +
+  # relabel x-axis, y-axis, and title
+  labs(
+    x = "Treatment Type",
+    y = "Mean Percent Cover",
+    title = "Mean % Cover Before and After Disturbance"
+  ) +
+  # same black and white theme as other plots
+  theme_bw() +
+  # remove legend because facet labels already identify cover type
+  theme(
+    legend.position = "none"
+  )
 
-#creating new plot
-treatments_bp <- ggplot(data = nfs,
-                  # x-axis: Treatment Type
-                  # y-axis: % Cover Native Grasses
-                  # fill geometries by (before and after)
-                  mapping = aes(x = before_after,
-                                y = mean_pc,
-                                )) +
-  # layer 3: jitter 
-  geom_jitter(width = 0.2, alpha=1.0, color = "gray30")+
-  # boxplot (and narrowing width)
-  geom_boxplot(width = 0.5, fill = NA, color = "black") +
-  # relabelling x- and y-axes, adding title
-  labs(x = "Treatment Type",
-       y = "% Cover Native Grasses",
-       title = "Mean % Cover by Treatment Type 2021-2025") +
-  # theme
-  theme_bw()+
-  # remove legend from theme
-  theme(legend.position = "none")
-
+# display plot
 treatments_bp
 ```
 
@@ -694,8 +743,8 @@ ggsave(
   # file path and name
   filename = here("outputs", "figure_4.png"),
   plot = treatments_bp,
-  width = 10,
-  height = 5,
+  width = 8,
+  height = 6,
   dpi = 300
 )
 ```
