@@ -2,9 +2,15 @@
 title: "Timeline Check in"
 author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
 date: "2026-05-22"
-format: pdf
 message: false
 warning: false
+format: 
+  pdf:
+    include-in-header: 
+       text: |
+         \usepackage{fvextra}
+         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+         \DefineVerbatimEnvironment{OutputCode}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
 ```{r}
@@ -317,7 +323,7 @@ focal_t_test_table
 
 # Background
 
-We assess whether the 2023 cultural burn is meeting its restoration goals of promoting native grassland species. This study may help to inform future restoration management decisions regarding intentional disturbance at NCOS and could have implications which extend to the management or ecological understanding of other coastal grassland systems. These questions are relevant because Santa Barbara coastal grasslands are fire adapted (Saglimbeni, 2024, pp. 1-2), but are now heavily affected by invasive species. Studying the NCOS burn helps show whether cultural burning can support native species like Stipa pulchra while reducing nonnative grassland invaders.
+We assess whether the 2023 cultural burn is meeting its restoration goals of promoting native grassland species. This study may help to inform future restoration management decisions regarding intentional disturbance at NCOS and could have implications which extend to the management or ecological understanding of other coastal grassland systems. These questions are relevant because Santa Barbara coastal grasslands are fire adapted (Saglimbeni, 2024, pp. 1-2), but are now heavily affected by invasive species. Studying the NCOS burn helps show whether cultural burning can support native species like *Stipa pulchra* while reducing nonnative grassland invaders. The four focal species, *Stipa pulchra*, *Medicago polymorpha*, *Melilotus indicus*, and *Festuca perennis*, were selected because a prior study found these native and non-native species showed contrasting abundance responses to disturbance, making them useful indicators for evaluating changes in grassland composition (Nestor, 2025).
 
 
 # Visualizations
@@ -531,7 +537,7 @@ clover_plot
 #| echo: false
 #| fig-width: 8
 #| fig-height: 5
-#| fig-cap: "Change in mean percent cover of four key grassland species on the NCOS Mesa from 2023, pre-burn, to 2024, one year post-burn. Bars represent the average percent-point change in cover across transects for each species, while individual points show transect-level percent-point changes; the gray horizontal line represents no change, with values above zero indicating increased cover and values below zero indicating decreased cover. Blue indicates the native species, Stipa pulchra, and red indicates invasive species: Medicago polymorpha, Melilotus indicus, and Festuca perennis. Overall, *S. pulchra* and *F. perennis* decreased after the burn, *M. indicus* increased, and *M. polymorpha* showed little average change. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way."
+#| fig-cap: "Change in mean percent cover of four key grassland species on the NCOS Mesa from 2023, pre-burn, to 2024, one year post-burn. Bars represent the average percent-point change in cover across transects for each species, while individual points show transect-level percent-point changes; the gray horizontal line represents no change, with values above zero indicating increased cover and values below zero indicating decreased cover. Blue indicates the native species, *Stipa pulchra*, and red indicates invasive species: *Medicago polymorpha*, *Melilotus indicus*, and *Festuca perennis*. Overall, *S. pulchra* and *F. perennis* decreased after the burn, *M. indicus* increased, and *M. polymorpha* showed little average change. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way."
 
 # create a ggplot with baselayer as the calculated percent point changes
 percent_point_cover_change_plot <- ggplot(
@@ -541,7 +547,9 @@ percent_point_cover_change_plot <- ggplot(
   aes(x = species_label, y = mean_percent_point_change, fill = status)
 ) +
   # bars show mean percent point change from 2023 to 2024
-  geom_col(width = 0.6) +
+  geom_col(width = 0.6,
+    alpha = 0.6
+  ) +
   # jittered points show transect level percent point changes
   geom_jitter(
     data = focal_change_transect_pp,
@@ -549,7 +557,6 @@ percent_point_cover_change_plot <- ggplot(
     width = 0.08,
     height = 0,
     size = 2,
-    alpha = 0.6,
     inherit.aes = FALSE
   ) +
   # horizontal reference line at 0 showing no change between years
@@ -567,7 +574,7 @@ percent_point_cover_change_plot <- ggplot(
         mean_percent_point_change - 2.4
       )
     ),
-    size = 5,
+    size = 3.5,
     color = "black"
   ) +
   # set fill colors for native and invasive bar categories
@@ -594,21 +601,11 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   # non default theme
   theme_bw() +
-  # adjust title, axis, and legend appearance
+  # consistent legend and axis text
   theme(
-    plot.title = element_text(
-      size = 18,
-      face = "bold",
-      hjust = 0.5
-    ),
-    axis.title = element_text(size = 14),
-    axis.text.x = element_text(
-      size = 13,
-      face = "italic"
-    ),
-    axis.text.y = element_text(size = 12),
     legend.position = c(0.15, 0.82),
-    legend.background = element_rect(fill = "transparent")
+    legend.background = element_rect(fill = "transparent"),
+    axis.text.x = element_text(face = "italic")
   )
 
 # display plot
@@ -623,7 +620,7 @@ percent_point_cover_change_plot
 # saving ggplot
 ggsave(
   # file path and name
-  filename = here("outputs", "figure_4.png"),
+  filename = here("outputs", "figure_3.png"),
   plot = percent_point_cover_change_plot,
   width = 8,
   height = 5,
@@ -638,19 +635,31 @@ ggsave(
 #| echo: false
 #| message: false
 
-
-# create new object
-nfs <- grasses_transect |> 
-  filter(year %in% c("2023","2024"),
-         cover_category == "NATIVE COVER") |> 
-  group_by(transect_name, year) |> 
-  mutate(before_after = factor(
-    case_when( 
-      year == 2023 ~ "No Treatment",
-      year == 2024 ~ "Fire"
+# create treatment data for native and non-native grass cover
+treatment_cover <- grasses_transect |> 
+  # keep only pre-burn and post-burn years
+  filter(
+    year %in% c(2023, 2024),
+    cover_category %in% c("NATIVE COVER", "NON-NATIVE COVER")
+  ) |> 
+  # create before/after treatment labels
+  mutate(
+    before_after = factor(
+      case_when( 
+        year == 2023 ~ "No Treatment",
+        year == 2024 ~ "Fire"
+      ),
+      levels = c("No Treatment", "Fire")
     ),
-    levels = c("No Treatment", "Fire")
-  ))
+    # create cleaner labels for facet panels and legend
+    cover_type = factor(
+      case_when(
+        cover_category == "NATIVE COVER" ~ "Native",
+        cover_category == "NON-NATIVE COVER" ~ "Non-native"
+      ),
+      levels = c("Native", "Non-native")
+    )
+  )
 
 ```
 
@@ -658,37 +667,88 @@ nfs <- grasses_transect |>
 #| label: boxplot creation
 #| echo: false
 #| message: false
-#| fig-width: 10
-#| fig-height: 5
-#| fig-cap: "Change in native mean % cover by treatment type from 2021-2024. Bars represent the average percent-point change in cover across transects for all native species. Individual points show transect level percent points; Black line represents average mean percent cover. Yellow bar indicates no treatment while orange bar indicates fire treatment. From the graph, it shows that after a disturbance like fire, native percent cover for grasses decreases at least one year post treatment. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way." 
+#| fig-width: 7
+#| fig-height: 6
+#| fig-cap: "Mean percent cover of native and non-native vegetation by treatment type from 2023-2024. Boxes represent variation in transect level mean percent cover before and one year after the prescribed burn. Individual points show transect-level mean percent cover, and the thick black line represents the median. Blue indicates native grass cover and red indicates non-native vegetation cover. Native grass cover was lower after fire treatment, while non-native vegetation cover showed a smaller change, suggesting that native and non-native grasses responded differently one year after disturbance."
 
+# creating new plot
+treatments_bp <- ggplot(
+  data = treatment_cover,
+  mapping = aes(
+    # x-axis: treatment type
+    x = before_after,
+    # y-axis: mean percent cover
+    y = mean_pc,
+    # fill boxes by cover type
+    fill = cover_type
+  )
+) +
+  # points show transect-level mean percent cover
+  geom_jitter(
+    aes(color = cover_type),
+    width = 0.2,
+    alpha = 1.0,
+    size = 2,
+    shape = 16
+  ) +
+  # boxplots show distribution across transects
+  geom_boxplot(
+    width = 0.5,
+    alpha = 0.6,
+    color = "black"
+  ) +
+  # stack native and non-native panels vertically
+  facet_wrap(
+    ~ cover_type,
+    ncol = 1
+  ) +
+  # set box fill colors
+  scale_fill_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Non-native" = "#DC3220"
+    )
+  ) +
+  # set point colors
+  scale_color_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Non-native" = "#DC3220"
+    )
+  ) +
+  # relabel x-axis, y-axis, and title
+  labs(
+    x = "Treatment Type",
+    y = "Mean Percent Cover",
+    title = "Mean % Cover Before and After Disturbance"
+  ) +
+  # same black and white theme as other plots
+  theme_bw() +
+  # remove legend because facet labels already identify cover type
+  theme(
+    legend.position = "none"
+  )
 
-#creating new plot
-treatments_bp <- ggplot(data = nfs,
-                  # x-axis: Treatment Type
-                  # y-axis: % Cover Native Grasses
-                  # fill geometries by (before and after)
-                  mapping = aes(x = before_after,
-                                y = mean_pc,
-                                fill = before_after)) +
-  # layer 3: jitter 
-  geom_jitter(width = 0.2, alpha=1.0, color = "#5D3A9B")+
-  # boxplot (and narrowing width)
-  geom_boxplot(width = 0.5) +
-  # filling geometries
-  scale_fill_manual(values = c("No Treatment" = "#E1Be6A",
-                               "Fire" = "#E66100")) +
-  # relabelling x- and y-axes, adding title
-  labs(x = "Treatment Type",
-       y = "% Cover Native Grasses",
-       title = "Mean % Cover by Treatment Type 2021-2025") +
-  # theme
-  theme_bw()+
-  # remove legend from theme
-  theme(legend.position = "none")
-
+# display plot
 treatments_bp
 ```
+
+```{r}
+#| label: saving mean percent cover of native grasses after disturbance plot
+#| message: false
+#| echo: false
+
+# saving ggplot
+ggsave(
+  # file path and name
+  filename = here("outputs", "figure_4.png"),
+  plot = treatments_bp,
+  width = 8,
+  height = 6,
+  dpi = 300
+)
+```
+
 
 ## Exploratory Visualization 1: Change in mean percent cover of key species after sheep grazing
 ```{r}
@@ -790,7 +850,9 @@ percent_point_cover_change_sheep_plot <- ggplot(
   aes(x = species_label, y = mean_percent_point_change, fill = status)
 ) +
   # bars show mean percent point change from 2024 to 2025
-  geom_col(width = 0.6) +
+  geom_col(width = 0.6,
+           alpha = 0.6
+  ) +
   # jittered points show transect level percent point changes
   geom_jitter(
     data = focal_change_transect_sheep_pp,
@@ -798,7 +860,6 @@ percent_point_cover_change_sheep_plot <- ggplot(
     width = 0.08,
     height = 0,
     size = 2,
-    alpha = 0.6,
     inherit.aes = FALSE
   ) +
   # horizontal reference line at 0 showing no change between years
@@ -816,7 +877,7 @@ percent_point_cover_change_sheep_plot <- ggplot(
         mean_percent_point_change - 2
       )
     ),
-    size = 5,
+    size = 3.5,
     color = "black"
   ) +
   # set fill colors for native and invasive bar categories
@@ -843,21 +904,11 @@ percent_point_cover_change_sheep_plot <- ggplot(
   ) +
   # non default theme
   theme_bw() +
-  # adjust title, axis, and legend appearance
+ # consistent legend and axis text
   theme(
-    plot.title = element_text(
-      size = 18,
-      face = "bold",
-      hjust = 0.5
-    ),
-    axis.title = element_text(size = 14),
-    axis.text.x = element_text(
-      size = 13,
-      face = "italic"
-    ),
-    axis.text.y = element_text(size = 12),
     legend.position = c(0.15, 0.82),
-    legend.background = element_rect(fill = "transparent")
+    legend.background = element_rect(fill = "transparent"),
+    axis.text.x = element_text(face = "italic")
   )
 
 # display plot
@@ -868,7 +919,7 @@ percent_point_cover_change_sheep_plot
 ## Exploratory Visualization 2: Effect of annual precipitation on native and invasive percent cover
 
 ```{r}
-#| label: data
+#| label: reading in weather data
 #| message: false
 #| echo: false
 
@@ -893,7 +944,7 @@ weather_clean <- weather |>
 ```
 
 ```{r}
-#| label: data
+#| label: wrangling weather data
 #| message: false
 #| echo: false
 
@@ -909,7 +960,7 @@ weather_clean <- weather |>
 ```
 
 ```{r}
-#| label: data
+#| label: wrangling weather data continued
 #| message: false
 #| echo: false
 
@@ -930,60 +981,59 @@ precip_veg <- full_join(
 ```
 
 ```{r}
-#| label: precip vs grand mean % cover
+#| label: precip-vs-grand-mean-percent-cover
 #| fig-width: 8
 #| fig-height: 4
-#| fig-cap: " Changes in grand mean percent cover for native and non-native cover categories on NCOS Mesa from 2021-2025. Individual points show grand mean percent cover for each year. Dark grey line shows trendline; blue line represents native cover; orange represents non-native cover; dotted line represents total annual precipitation. As an exploratory visualization, this figure suggests that precipitation is a factor that increases non-native percent cover while precipitation doesn't increase native percent cover."
+#| echo: false
+#| fig-cap: "Relationship between total annual precipitation and grand mean percent cover for native and non-native vegetation on the NCOS Mesa from 2021-2025. Individual points represent annual grand mean percent cover values for both cover types. Linear trendlines show the exploratory relationship between precipitation and cover, with blue representing native grass cover and red representing non-native vegetation cover. The trend suggests that non-native cover increased with higher precipitation, while native grass cover showed little to no positive relationship with precipitation."
 
 
-TAPnat <- ggplot(data = precip_veg,
-       # x axis is year, y axis is grand mean % cover, color is cover category
-       mapping = aes(x = year,
-                     y = grand_mean_pc,
-                     color = cover_category)) +
-  # first layer: points for year and grand mean % cover
-  geom_point() +
-  # second layer: lines to connect points
-  geom_line() +
-  # trend line
-  geom_smooth(method = "lm", se = TRUE, aes(linetype = "Trend Line", color = "Trend Line")) +
-  # add precipitation as secondary y axis scaled to grand mean % cover range
-  geom_line(aes(y = total_precip / max(precip_veg$total_precip, na.rm = TRUE) *
-                    max(precip_veg$grand_mean_pc, na.rm = TRUE),
-                color = "Total Precipitation"),
-            linetype = "dashed") +
-  # facet wrap to display cover category
-  facet_wrap(~cover_category) +
-  # add color for cover categories, precipitation, and trend line
-  scale_color_manual(name = "Legend",
-                     values = c("NATIVE COVER" = "#005AB5",
-                                "NON-NATIVE COVER" = "#DC3220",
-                                "Total Precipitation" = "#228B22",
-                                "Trend Line" = "gray30"),
-                     labels = c("Native", "Non-native", "Total Precipitation", "Trend Line")) +
-  scale_linetype_manual(name = "Legend",
-                        values = c("Trend Line" = "solid")) +
-  # merge into one legend, suppress separate linetype legend
-  guides(color = guide_legend(override.aes = list(linetype = c("solid", "solid", "dashed", "solid"),
-                                                   shape = c(16, 16, NA, NA))),
-         linetype = "none") +
-  # dual y axes
-  scale_y_continuous(
-    name = "Grand Mean Percent Cover (%)",
-    sec.axis = sec_axis(
-      ~ . * max(precip_veg$total_precip, na.rm = TRUE) /
-            max(precip_veg$grand_mean_pc, na.rm = TRUE),
-      name = "Total Annual Precipitation (in)"
+# create scatterplot object
+precip_cover_plot <- ggplot(
+  data = precip_veg,
+  mapping = aes(
+    # x-axis: total annual precipitation
+    x = total_precip,
+    # y-axis: grand mean percent cover
+    y = grand_mean_pc,
+    # color points and trendlines by cover type
+    color = cover_category
+  )) +
+  # add points for each year/category observation
+  geom_point(size = 2, alpha = 0.7) +
+  # add separate linear trendlines for native and non-native cover
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  ) +
+  # set colors for native and non-native cover
+  scale_color_manual(
+    name = "Cover Type",
+    values = c(
+      "NATIVE COVER" = "#005AB5",
+      "NON-NATIVE COVER" = "#DC3220"
+    ),
+    labels = c(
+      "Native",
+      "Non-native"
     )
   ) +
-  # labels
+  # add plot title and axis labels
   labs(
-    title = "Precipitation and grand mean % cover of native and nonnative cover",
-    x = "Year") +
-  theme_bw()
+    title = "Relationship Between Precipitation and Vegetation Cover",
+    x = "Total Annual Precipitation (inches)",
+    y = "Grand Mean % Cover"
+  ) +
+  # same base theme as the other plots
+  theme_bw() +
+  # consistent legend
+  theme(
+    legend.position = c(0.15, 0.82),
+    legend.background = element_rect(fill = "transparent")
+  )
 
-TAPnat
-
+# display plot
+precip_cover_plot
 ```
 
 
