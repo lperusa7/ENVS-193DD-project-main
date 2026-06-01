@@ -202,9 +202,9 @@ focal_species <- tibble(
     "Festuca_perennis"
   ),
   species_label = c(
-    "S. pulchra",
+    "S. pulchra*",
     "M. polymorpha",
-    "M. indicus",
+    "M. indicus*",
     "F. perennis"
   ),
   status = c(
@@ -256,9 +256,9 @@ focal_change_summary_pp <- focal_change_transect_pp |>
     species_label = factor(
       species_label,
       levels = c(
-        "S. pulchra",
+        "S. pulchra*",
         "M. polymorpha",
-        "M. indicus",
+        "M. indicus*",
         "F. perennis"
       )
     ),
@@ -422,7 +422,7 @@ TS_plot <- ggplot() +
        y = "Mean Percent Cover",
        color = "Cover Type",
        # consider dropping title since figure caption conveys the same information
-       title = "Native vs. Non-Native Grass Cover Over Time") +
+       title = "Native Grasses vs. Non-Native Vegetation Over Time") +
   # adding black and white theme
   theme_bw() +
   # moving legend position to the top-left of figure panel
@@ -607,7 +607,8 @@ percent_point_cover_change_plot <- ggplot(
       )
     ),
     size = 3.5,
-    color = "black"
+    color = "black",
+    nudge_x = 0.15
   ) +
   # set fill colors for native and invasive bar categories
   scale_fill_manual(
@@ -631,13 +632,22 @@ percent_point_cover_change_plot <- ggplot(
     y = "Change in Mean % Cover\n(percentage points)",
     fill = NULL
   ) +
+  # adding bold and italics to x-axis labels
+  scale_x_discrete(
+    labels = c(
+      "S. pulchra*"   = "***S. pulchra***\\*",
+      "M. polymorpha" = "*M. polymorpha*",
+      "M. indicus*"   = "***M. indicus***\\*",
+      "F. perennis"   = "*F. perennis*"
+    )
+  ) +
   # non default theme
   theme_bw() +
   # consistent legend and axis text
   theme(
     legend.position = c(0.15, 0.82),
     legend.background = element_rect(fill = "transparent"),
-    axis.text.x = element_text(face = "italic")
+    axis.text.x = ggtext::element_markdown()
   )
 
 # display plot
