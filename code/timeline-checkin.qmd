@@ -434,6 +434,22 @@ TS_plot <- ggplot() +
 TS_plot
 ```
 
+```{r}
+#| label: saving timeseries plot
+#| message: false
+#| echo: false
+
+# saving ggplot
+ggsave(
+  # file path and name
+  filename = here("outputs", "figure_1.png"),
+  plot = TS_plot,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+```
+
 ## Plot 2: Sweet and bur clover abundance over time
 
 ```{r}
@@ -527,6 +543,22 @@ clover_plot <- ggplot() +
 
 # displaying plot
 clover_plot
+```
+
+```{r}
+#| label: saving clover plot
+#| message: false
+#| echo: false
+
+# saving ggplot
+ggsave(
+  # file path and name
+  filename = here("outputs", "figure_2.png"),
+  plot = clover_plot,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
 ```
 
 ## Plot 3: Change in mean percent cover of key species after disturbance
