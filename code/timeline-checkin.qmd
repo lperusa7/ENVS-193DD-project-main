@@ -627,7 +627,7 @@ percent_point_cover_change_plot <- ggplot(
   ) +
   # add plot title, axis labels, and legend label
   labs(
-    title = "Change in Mean % Cover of Key Species Post-burn",
+    title = "Change in Mean % Cover of Key Species from Pre to Post-burn",
     x = "Species",
     y = "Change in Mean % Cover\n(percentage points)",
     fill = NULL
