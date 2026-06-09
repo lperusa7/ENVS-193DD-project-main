@@ -301,6 +301,9 @@ Focus was placed on the 2023 cultural burn and its effects. Plots in grassland r
  
 For burns, percent cover data was collected by ocularly identifying each species within the plot and estimating its absolute percent cover of the plot. For quadrat transects, they are divided into 100 ten-centimeter squares and percent cover is estimated for each species in the quadrat. Additional figure inspiration was taken from the percent biomass change in sheep-grazing, using the percent change in cover for our analysis instead. 
 
+To address our third question, whether individual focal species changed in cover before and after the burn, we used paired t-tests comparing mean percent cover in 2023 (pre-burn) and 2024 (post-burn) for each of the four focal species: Stipa pulchra, Medicago polymorpha, Melilotus indicus, and Festuca perennis. Observations were paired by transect (n = 7), so each test evaluated whether the per-transect change in cover between the two years differed from zero. We assessed significance at α = 0.05 and did not apply a multiple-comparison correction, given the small number of pre-specified focal species. All tests were conducted in R using the t.test function.
+
+To explore precipitation as a potential confounding influence on the time-series patterns, we obtained daily weather data from NOAA station USW00053152 in Santa Barbara (latitude: 34.4141, longitude: -119.8796) for 2020 to 2025 and summarized it to annual precipitation. We then used a Pearson correlation to test the association between annual mean grass percent cover and annual precipitation. The correlation was not statistically significant (r = 0.82, p = 0.09), so we found no evidence that precipitation accounted for the observed cover trends; in any case, a correlation alone could not establish a causal relationship.
 
 
 # Results
