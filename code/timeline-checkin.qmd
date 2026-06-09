@@ -1078,6 +1078,28 @@ precip_cover_plot <- ggplot(
 precip_cover_plot
 ```
 
+```{r}
+#| label: precipitation cover correlation
+#| message: false
+#| echo: false
+
+# creating correlation object from precip_veg
+precip_cor <- precip_veg |>
+  # split data by native and non-native cover
+  group_by(cover_category) |>
+  # run Pearson correlation test for each group
+  summarize(
+    n = n(),
+    correlation = cor(total_precip, grand_mean_pc, method = "pearson"),
+    p_value = cor.test(total_precip, grand_mean_pc, method = "pearson")$p.value,
+    .groups = "drop"
+  )
+
+# display results
+precip_cor
+```
+
+
 
 # Plan for elective
 - The general concept is we are making an ArcGIS StoryMap presenting our NCOS Mesa vegetation analysis. The StoryMap walks through site context, the 2023 prescribed burn, methods, results, and an embedded interactive dashboard where users can explore transect photo points and a spatial percent cover heatmap across the Mesa Perennial Grassland.
