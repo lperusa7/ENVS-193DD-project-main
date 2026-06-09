@@ -293,6 +293,14 @@ grasses_transect <- grasses |>
 
 # Introduction
 
+This study assesses the progress of perennial grassland restoration on the North Campus Open Space (NCOS) Mesa using annual vegetation monitoring data from 2021 to 2025, with a focus on the immediate impact of intentional disturbance as a means of bolstering key native grass populations and suppressing exotic species abundance. NCOS is an active wetland restoration site with restored upland habitats such as native grassland, coastal sage scrub, and vernal pools (Rickard, 2024). Restoration success on the Mesa depends on both increasing native grass cover and understanding how non-native vegetation responds to restoration practices. Thus, we focus on native grass species as restoration targets and non-native grass and forb species as grassland invaders.
+
+Prescribed fire is often used in California grasslands to manage competition because it can reduce exotic annual grasses, lower thatch cover, and create conditions that may favor native perennial species (Rickard, 2024). The fall 2023 cultural burn on the Mesa serves as an imperfect opportunity to evaluate whether fire can support restoration goals of shifting plant communities from exotic annual dominance toward native perennial grass recovery in this system and beyond. However, previous California grassland studies show that fire effects are not uniform across plant communities. Outcomes depend on which plant groups are present and when and how often burning occurs. For example, prescribed burn effects on California coastal prairie seed banks varied among native and non-native grasses and non-native forbs (Galloway et al., 2026), and burn timing and frequency influenced whether vegetation composition shifted in the intended direction (Hankins, 2013; Carlsen et al., 2017). Because native perennial grass recovery can take multiple years, we evaluate only short-term vegetation response one year after the 2023 cultural burn (Menke, 1992; Keeley et al., 2023). Specifically, we ask:
+
+1. How does the percent cover of native grasses vary over time compared to the percent cover of exotic vegetation on the NCOS Mesa Perennial Grasslands?
+    a. How does intentional disturbance influence this relationship?
+    b. How do key individual species, including Stipa pulchra, Medicago polymorpha, Melilotus indicus, and Festuca perennis, vary in percent cover before and after intentional disturbance?
+
 # Methods
   
 Analysis of native grasses and non-native vegetation was focused on the years 2021 to 2025, with particular interest in the years 2023 and 2024. The survey month for grasslands is in July.  Species of interest were chosen based on the overlap of target species from previous studies of sheep-grazing and burn disturbance. Within the 16.8 acres of perennial grassland (Mesa), permanent transects with one-square-meter quadrats were used to monitor specifically short or low-growing vegetation (Rickard, 2024). Quadrats alternated between left and right of the transect line every 3 meters, with transects being 30 meters long. The first quadrat is centered left of the starting point of each transect, giving 11 quadrats for a 30-meter transect, for a total of 8 transects, with 88 quadrats.  
@@ -304,7 +312,6 @@ For burns, percent cover data was collected by ocularly identifying each species
 To address our third question, whether individual focal species changed in cover before and after the burn, we used paired t-tests comparing mean percent cover in 2023 (pre-burn) and 2024 (post-burn) for each of the four focal species: Stipa pulchra, Medicago polymorpha, Melilotus indicus, and Festuca perennis. Observations were paired by transect (n = 7), so each test evaluated whether the per-transect change in cover between the two years differed from zero. We assessed significance at α = 0.05 and did not apply a multiple-comparison correction, given the small number of pre-specified focal species. All tests were conducted in R using the t.test function.
 
 To explore precipitation as a potential confounding influence on the time-series patterns, we obtained daily weather data from NOAA station USW00053152 in Santa Barbara (latitude: 34.4141, longitude: -119.8796) for 2020 to 2025 and summarized it to annual precipitation. We then used a Pearson correlation to test the association between annual mean grass percent cover and annual precipitation. The correlation was not statistically significant (r = 0.82, p = 0.09), so we found no evidence that precipitation accounted for the observed cover trends; in any case, a correlation alone could not establish a causal relationship.
-
 
 # Results
 
@@ -370,6 +377,10 @@ TS_plot <- ggplot() +
 # displaying plot
 TS_plot
 ```
+
+From 2021 to 2023, the mean percent cover followed a restoration as usual, with both native and non-native grasses increasing. Native grasses remained the more abundant group throughout the pre-burn period. Between the 2023 (pre-burn) and 2024 (post-burn) surveys, native grass cover dropped sharply while non-native cover declined only slightly, so that by 2024, non-native cover slightly exceeded native grasses for the first time in the record. By 2025, the cover of both groups declined further, and the two nearly converged, with non-native grasses remaining marginally above native grasses.
+Overall, Figure 1 answers study question 1 by tracing how native and non-native grass cover varied over time, with native grasses remaining more abundant than non-natives through the pre-burn period. It addresses sub-question 1 by showing that this relationship reversed around the burn: native cover dropped sharply between 2023 and 2024 while non-native cover declined only slightly, so that non-native grasses edged above native grasses afterward.
+
 
 ## Figure 2: Mean Percent Cover Change Before and After the Burn
 
@@ -464,7 +475,22 @@ percent_point_cover_change_plot <- ggplot(
 percent_point_cover_change_plot
 ```
 
+A paired t-test showed that two of our four focal species changed significantly in cover between 2023 and 2024 (Table 1). Stipa pulchra, the native restoration target, declined by roughly 21 percent between years (t = 4.66, df = 6, p = 0.003), the largest change of any species. This decline tracks the post-burn drop in aggregate native grass cover in Figure 1, since S. pulchra is the dominant native grass on the Mesa. In contrast, Melilotus indicus increased by roughly 14 percent between years (t = -3.51, df = 6, p = 0.013). The other two invasive species did not change significantly: Festuca perennis declined on average (about 14 percent) but was not distinguishable from no change (p = 0.350), and Medicago polymorpha showed little average change (p = 0.716). 
+Together, these results show that the burn did not affect species uniformly; responses were species-specific rather than predictable from nativity alone, with one native declining sharply, one invasive increasing sharply, and the remaining two invasives showing no significant change.
+
 # Discussion
+
+The NCOS 2024 Monitoring Report provides context for the cultural burn, allowing 2023 and 2024 to be interpreted as pre and post-burn comparison years. The decline in Stipa pulchra is important because it shows that the key native perennial grass indicator did not recover immediately one year after the burn. This alone does not determine the efficacy of intentional disturbance, but it identifies S. pulchra as a central species in continued monitoring efforts on the Mesa. Further, the report notes that Melilotus indicus emerged after fire at NCOS, a pattern reinforced by its post-burn proliferation in our results. This supports the idea that intentional disturbance created immediate conditions favorable for M. indicus, a non-native forb, and cannot simply be interpreted as suppressing invaders or promoting native grass recovery. The decline in S. pulchra and increase in M. indicus suggest that the Mesa’s ongoing post-burn trajectory must be evaluated through species-level comparisons, not only broad native versus non-native cover.
+
+Previous grassland studies show that the effects of prescribed fire are species-specific and timescale-dependent. Grassland species are known to show varying degrees of reestablishment following fire (Berleman et al., 2016), which helps explain why the NCOS burn produced contrasting responses among focal species, and not a single community-wide recovery pattern. Additionally, the non-native persistence we observed after fire is consistent with research showing that one burn may not significantly reduce non-native abundance, especially when deeper persistent seedbanks remain largely unaffected by surface fire (Galloway et al., 2026). The decline in native grass cover should therefore be interpreted as an early response rather than a final restoration outcome. Stipa pulchra recovery may unfold over multiple years after prescribed burning, and restoration indicators may be idiosyncratic and do not always move steadily and predictably toward target conditions (Keeley et al., 2023; Matthews et al., 2009). The key question here is whether continued monitoring shows the community eventually moving towards native perennial grassland.
+
+# Limitations
+
+Several features of the data limit interpretation. Cover was estimated ocularly, so values are subjective and can vary between observers and years, and sampling was restricted to eight fixed transects, which may not represent the full spatial variation of the Mesa. With only eight transects and five survey years, both the t-tests and the precipitation correlation had limited statistical power.
+
+Key confounding variables were also poorly resolved. Two of these potential confounding variables are precipitation and temperature, but the daily NOAA values (precipitation in inches, maximum temperature in Fahrenheit) had to be aggregated to annual summary values to match the yearly surveys, discarding the within-season timing that matters most and likely explaining why our precipitation correlation was not significant.
+
+Temporal resolution is the final constraint. Surveys occur once per year in summer, when these grasses are largely dormant, so they miss the seasonal dynamics where much of the variation occurs. The annual cadence also cannot separate the Fall 2023 burn from the Fall 2024 grazing in the 2025 data, and a single post-burn year is too short to capture native perennial recovery.
 
 # References
 @nativeJamesgrass
