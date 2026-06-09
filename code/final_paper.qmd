@@ -1,0 +1,457 @@
+---
+title: "Final Paper"
+author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
+format: pdf
+---
+
+```{r}
+#| label: packages
+#| message: false
+#| warning: false
+#| echo: false
+
+# data wrangling and general use
+library(tidyverse)
+library(janitor)
+library(here)
+
+# plot enhancements
+library(ggrepel)
+library(cowplot)
+library(ggtext)
+
+# table formatting
+library(flextable)
+
+# saving tables
+library(webshot2)
+```
+
+```{r}
+#| label: data
+#| message: false
+#| echo: false
+
+# read in veg data
+veg <- read_csv(here("data", "raw", "veg.csv"))
+
+# read in metadata
+metadata <- read_csv(here("data", "raw", "vp_veg_metadata.csv"))
+```
+
+```{r}
+#| label: adding target species list
+#| message: false
+#| echo: false
+
+# all grass species (Poaceae) at NCOS mesa, both native and non-native
+poaceae_species <- c(
+  "Bromus_hordeaceus",
+  "Festuca_perennis",
+  "Stipa_pulchra",
+  "Polypogon_monspeliensis",
+  "Brachypodium_distachyon",
+  "Festuca_myuros",
+  "Avena_barbata",
+  "Hordeum_marinum",
+  "Avena_fatua",
+  "Parapholis_incurva",
+  "Bromus_diandrus",
+  "Distichlis_spicata",
+  "Bromus_catharticus",
+  "Hordeum_murinum",
+  "Hordeum_brachyantherum_brachy.",
+  "Polypogon_viridis",
+  "Cortaderia_selloana",
+  "Festuca_bromoides",
+  "Cynodon_dactylon",
+  "Poa_annua",
+  "Festuca_microstachys",
+  "Crypsis_schoenoides",
+  "Polypogon_interruptus",
+  "Hordeum_brachyantherum",
+  "Bromus_madritensis",
+  "Elymus_triticoides"
+)
+
+# native forb species to exclude from grass analysis
+native_forbs <- c(
+  "Plantago_erecta",
+  "Sisyrinchium_bellum",
+  "Sidalcea_malviflora",
+  "Eryngium_vaseyi",
+  "Acmispon_maritimus",
+  "Acmispon_wrangelianus",
+  "Madia_sativa",
+  "Psilocarphus_tennulus",
+  "Psilocarphus_brevissimus",
+  "Spergularia_macrotheca",
+  "Centromadia_parryi_australis",
+  "Lepidium_nitidum",
+  "Stebbinsoseris_heterocarpa",
+  "Laennecia_coulteri"
+)
+
+# non-vegetation cover and non-target species to exclude from analysis
+exclude_other <- c(
+  "Bare Ground",
+  "Natural Thatch",
+  "unlisted",
+  "moss",
+  "boulder_rock",
+  "biocrust",
+  "Baccharis_pilularis",
+  "Juncus_bufonius",
+  "Juncus_phaeocephalus",
+  "Eleocharis_macrostachya",
+  "Eleocharis_acicularis",
+  "Eleocharis_palustris"
+)
+```
+
+
+```{r}
+#| label: creating species lookup
+#| message: false
+#| echo: false
+
+# creating data frame from veg
+species_lookup <- veg |>
+  # keep only GL transects at ncos
+  filter(str_detect(transect_name, "GL"), site == "ncos") |>
+  # remove unlisted since it maps to multiple categories
+  filter(psoc != "unlisted") |>
+  # return one unique row per species-category combination
+  distinct(psoc, cover_category) |>
+  # sort alphabetically by species for readability
+  arrange(psoc)
+```
+
+
+```{r}
+#| label: creating explicit0 dataframe
+#| message: false
+#| echo: false
+
+# create a new object from veg
+gl_explicit0 <- veg |> 
+  # filter all occurrences where transect_name contains VP
+  filter(str_detect(transect_name, "GL"),
+         site == "ncos") |> 
+  # not including cover_category because we will join it back after complete()
+  select(-cover_category) |> 
+  # complete all possible combinations of year, pool, psoc and distance
+  complete(year, transect_name, psoc, transect_distance,
+           # fill values of percent cover with 0
+           fill = list(percent_cover = 0)) |>
+  # group by year, pool, and psoc
+  group_by(year, transect_name, psoc) |>
+  # calculate total percent cover across all quads
+  summarize(sum_pc = sum(percent_cover, na.rm = TRUE)) |>
+  # ungroup the data frame
+  ungroup() |>
+  # create a new column called year_pool from year and transect name
+  unite("year_pool", year, transect_name, remove = TRUE) |> 
+  # join with metadata data frame
+  left_join(metadata, by = "year_pool") |> 
+  # calculate mean percent cover from total percent cover/number of quadrats
+  mutate(mean_pc = sum_pc/num_quad) |> 
+  # re-attach cover_category from lookup using psoc as key
+  left_join(species_lookup, by = "psoc") |> 
+  # excluding "GL-11" because it was unburned
+  filter(transect_name != "GL-11")
+```
+
+```{r}
+#| label: calculating change in mean percent cover
+#| message: false
+#| echo: false
+#| warning: false
+
+## Change in percentage points of focal species percent cover
+## 2023 = pre-burn
+## 2024 = post-burn
+
+# define focal species with display labels and native/invasive status
+focal_species <- tibble(
+  psoc = c(
+    "Stipa_pulchra",
+    "Medicago_polymorpha",
+    "Melilotus_indicus",
+    "Festuca_perennis"
+  ),
+  species_label = c(
+    "S. pulchra*",
+    "M. polymorpha",
+    "M. indicus*",
+    "F. perennis"
+  ),
+  status = c(
+    "Native",
+    "Invasive",
+    "Invasive",
+    "Invasive"
+  )
+)
+
+# filter gl_explicit0 to focal species and pre/post burn years only
+focal_cover <- gl_explicit0 |>
+  filter(
+    year %in% c(2023, 2024),
+    psoc %in% focal_species$psoc
+  ) |>
+  # keep only columns needed for change calculation
+  select(year, transect_name, psoc, mean_pc) |>
+  # attach species labels and status from focal_species
+  left_join(focal_species, by = "psoc")
+
+# calculate per-transect percentage point change from 2023 to 2024
+focal_change_transect_pp <- focal_cover |>
+  # pivot to wide format so 2023 and 2024 are separate columns
+  pivot_wider(
+    names_from = year,
+    values_from = mean_pc,
+    names_prefix = "year_"
+  ) |>
+  # calculate difference in mean percent cover between years
+  mutate(
+    percent_point_change = year_2024 - year_2023
+  ) |>
+  # remove transects missing data for either year
+  filter(!is.na(percent_point_change))
+
+# aggregate to mean percentage point change per species across transects
+focal_change_summary_pp <- focal_change_transect_pp |>
+  # group by spp, spp label, and status
+  group_by(psoc, species_label, status) |>
+  # calculate mean percent point change
+  summarize(
+    mean_percent_point_change = mean(percent_point_change, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  # set factor levels to control species order in plots
+  mutate(
+    species_label = factor(
+      species_label,
+      levels = c(
+        "S. pulchra*",
+        "M. polymorpha",
+        "M. indicus*",
+        "F. perennis"
+      )
+    ),
+    # set factor levels to control fill order in legend
+    status = factor(status, levels = c("Native", "Invasive"))
+  )
+```
+
+```{r}
+#| label: plot 1 creating grasses dataframe
+#| message: false
+#| echo: false
+
+# creating grasses data frame from gl_explicit0
+grasses <- gl_explicit0 |> 
+  # filtering to include poaceae grasses species
+  filter(psoc %in% poaceae_species,
+         # filtering to include only native and non-native cover categories
+         cover_category %in% c("NATIVE COVER", "NON-NATIVE COVER"))
+```
+
+```{r}
+#| label: plot 1 creating grasses_summary for time series plot
+#| message: false
+#| echo: false
+
+grasses_summary <- grasses |> 
+  # grouping by year and cover category
+  group_by(year, cover_category) |> 
+  # calculating average per transect mean_pc across all transects and species within each group
+  summarise(grand_mean_pc = mean(mean_pc, na.rm = TRUE),
+            se = sd(mean_pc, na.rm = TRUE) / sqrt(n())) |> 
+  # remove grouping
+  ungroup()
+```
+
+```{r}
+#| label: plot 1 creating grasses transect data frame
+#| message: false
+#| echo: false
+
+# creating new object from grasses
+grasses_transect <- grasses |>
+  # grouping by year, transect, and conver category
+  group_by(year, transect_name, cover_category) |>
+  # calculating mean pc
+  summarize(mean_pc = mean(mean_pc, na.rm = TRUE)) |>
+  # removing groups
+  ungroup()
+```
+
+
+# Introduction
+
+# Methods
+
+# Results
+
+## Figure 1: Native Grass vs. Non-Native Vegetation Over Time
+
+```{r}
+#| label: timeseries-plot
+#| message: false
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+#| fig-cap: "Mean percent cover of native and non-native grasses along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events."
+
+TS_plot <- ggplot() +
+  # individual transect observations as open circles
+  geom_jitter(data = grasses_transect,
+             aes(x = year, y = mean_pc, color = cover_category),
+             shape = 16, alpha = 0.4, size = 2, width = 0.1, height = 0.1) +
+  # ribbon showing ±1 SE around the grand mean; low alpha to reduce visual noise
+  geom_ribbon(data = grasses_summary,
+              aes(x = year, ymin = grand_mean_pc - se, ymax = grand_mean_pc + se,
+                  fill = cover_category), alpha = 0.1) +
+  # line connecting the grand means across years
+  geom_line(data = grasses_summary,
+            aes(x = year, y = grand_mean_pc, color = cover_category)) +
+  # grand mean as filled circle
+  geom_point(data = grasses_summary,
+             aes(x = year, y = grand_mean_pc, color = cover_category),
+             shape = 18, size = 5) +
+  # dashed line marking the prescribed burn intentional disturbance event
+  geom_vline(xintercept = 2023.5, linetype = "dashed", color = "black") +
+  # dashed line marking the rotational grazing intentional disturbance event
+  geom_vline(xintercept = 2024.5, linetype = "dashed", color = "black") +
+  # text label for burn event; hjust pushes label right of the line
+  annotate("text", x = 2023.5, y = 10,
+           label = "Prescribed Burn", hjust = -0.1, size = 3.5) +
+  # text label for grazing event; hjust pushes label right of the line
+  annotate("text", x = 2024.5, y = 10,
+           label = "Sheep Grazing", hjust = -0.1, size = 3.5) +
+  # setting color colors; colors must match to merge legends
+  scale_color_manual(name = "Cover Type",
+                   values = c("NATIVE COVER" = "#005AB5",
+                              "NON-NATIVE COVER" = "#DC3220"),
+                   labels = c("Native", "Non-native")) +
+  # setting fill colors; colors must match to merge legends
+  scale_fill_manual(name = "Cover Type",
+                  values = c("NATIVE COVER" = "#005AB5",
+                             "NON-NATIVE COVER" = "#DC3220"),
+                  labels = c("Native", "Non-native")) +
+  # labeling the axes
+  labs(x = "Year",
+       y = "Mean Percent Cover",
+       color = "Cover Type",
+       # consider dropping title since figure caption conveys the same information
+       title = "Native Grasses vs. Non-Native Vegetation Over Time") +
+  # adding black and white theme
+  theme_bw() +
+  # moving legend position to the top-left of figure panel
+  theme(legend.position = c(0.15, 0.82),
+        # transparent legend background so underlying data points are visible
+        legend.background = element_rect(fill = "transparent"))
+
+# displaying plot
+TS_plot
+```
+
+## Figure 2: Mean Percent Cover Change Before and After the Burn
+
+```{r}
+#| label: plotting change in mean percent cover
+#| message: false
+#| echo: false
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Change in mean percent cover of four key grassland species on the NCOS Mesa from 2023, pre-burn, to 2024, one year post-burn. Bars represent the average percent-point change in cover across transects for each species, while individual points show transect-level percent-point changes; the gray horizontal line represents no change, with values above zero indicating increased cover and values below zero indicating decreased cover. Blue indicates the native species, *Stipa pulchra*, and red indicates invasive species: *Medicago polymorpha*, *Melilotus indicus*, and *Festuca perennis*. Overall, *S. pulchra* and *F. perennis* decreased after the burn, *M. indicus* increased, and *M. polymorpha* showed little average change. This figure connects to our main question by showing that intentional disturbance did not affect all native and invasive species in the same way."
+
+# create a ggplot with baselayer as the calculated percent point changes
+percent_point_cover_change_plot <- ggplot(
+  focal_change_summary_pp,
+  # x axis = focal species, y axis = mean percent point change,
+  # fill = native or invasive status
+  aes(x = species_label, y = mean_percent_point_change, fill = status)
+) +
+  # bars show mean percent point change from 2023 to 2024
+  geom_col(width = 0.6,
+    alpha = 0.6
+  ) +
+  # jittered points show transect level percent point changes
+  geom_jitter(
+    data = focal_change_transect_pp,
+    aes(x = species_label, y = percent_point_change, color = status),
+    width = 0.08,
+    height = 0,
+    size = 2,
+    inherit.aes = FALSE
+  ) +
+  # horizontal reference line at 0 showing no change between years
+  geom_hline(
+    yintercept = 0,
+    color = "gray50"
+  ) +
+  # add rounded mean percent point change labels above or below columns
+  geom_text(
+    aes(
+      label = round(mean_percent_point_change, 0),
+      y = if_else(
+        mean_percent_point_change >= 0,
+        mean_percent_point_change + 2.9,
+        mean_percent_point_change - 2.4
+      )
+    ),
+    size = 3.5,
+    color = "black",
+    nudge_x = 0.15
+  ) +
+  # set fill colors for native and invasive bar categories
+  scale_fill_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Invasive" = "#DC3220"
+    )
+  ) +
+  # set point colors to match bar fill colors
+  scale_color_manual(
+    values = c(
+      "Native" = "#005AB5",
+      "Invasive" = "#DC3220"
+    ),
+    guide = "none"
+  ) +
+  # add plot title, axis labels, and legend label
+  labs(
+    title = "Change in Mean % Cover of Key Species from Pre to Post-burn",
+    x = "Species",
+    y = "Change in Mean % Cover\n(percentage points)",
+    fill = NULL
+  ) +
+  # adding bold and italic x labels
+  scale_x_discrete(
+    labels = c(
+      "S. pulchra*"   = "***S. pulchra***\\*",
+      "M. polymorpha" = "*M. polymorpha*",
+      "M. indicus*"   = "***M. indicus***\\*",
+      "F. perennis"   = "*F. perennis*"
+    )
+  ) +
+  # non default theme
+  theme_bw() +
+  # consistent legend and axis text
+  theme(
+    legend.position = c(0.15, 0.82),
+    legend.background = element_rect(fill = "transparent"),
+    axis.text.x = ggtext::element_markdown()
+  )
+
+# display plot
+percent_point_cover_change_plot
+```
+
+# Discussion
+
+# References
