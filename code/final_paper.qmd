@@ -2,6 +2,7 @@
 title: "Final Paper"
 author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
 format: pdf
+bibliography: references.bib
 ---
 
 ```{r}
