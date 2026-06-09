@@ -3,6 +3,7 @@ title: "Grassland Vegetation Dynamics Under Intentional Disturbance at North Cam
 author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
 format: pdf
 bibliography: references.bib
+csl: ecology.csl
 ---
 
 ```{r}
