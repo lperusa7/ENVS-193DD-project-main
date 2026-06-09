@@ -296,9 +296,13 @@ grasses_transect <- grasses |>
 # Methods
   
   Analysis of native and non-native grass and forbs were focused on the years 2021 to 2025, with particular interest within the years 2023, 2024, and 2025. Species of interest were chosen based on overlap target species from previous studies of sheep-grazing and burn disturbance. Within the 16.8 acres of perennial grassland (Mesa), permanent transects with a one-square-meter quadrats were used to monitor specifically short or low-growing vegetation (Rickard, 2024). Quadrats alternated between left and right of the transect line every 3 meters. The quadrats were spaced 3 meters apart, with transects being 30 meters long. The first quadrat is centered left of the starting point of each transect, giving 11 quadrats for a 30 meter transect for a total of 8 transects, with 88 quadrats. The survey month for grasslands is in July.  
+  
   Types of disturbances within these years include a burn in 2023 and a sheep-grazing the following year in 2024. NCOS has a total of 14+ acres of native perennial grassland within its 130 acres of restoration. In the grassland regions, NCOS staff used 65 1 meter by 1 meter experimental plots that were placed within the burn area, with an additional 10 taken outside the burn area to represent unburned controls (Rickard, 2024). Each plot was surveyed before and after burn in July 2023 and May 2024 respectively. Of these 65 plots, 32 were grass plots chosen based on dominant grass species at each plot that contained target species Sipta pulchra and Festuca perennis. Percent cover data was collected by ocularly identifying each species within the plot and estimating its absolute percent cover of the plot. 
+  
   For sheep-grazing, 320 Merino sheep grazed NCOS on a 3 week rotational schedule. They remained in each of the 6 paddocks for 3.5 days on average, with each paddock having a mean area of 3.02 acres to cover 18.14 total acres. Plant growth was observed from January to May with weekly check-ins to count and identify individuals (Nestor, 2025). 
+  
   Statistical analysis of mean percent change in cover used a T-test, implementing similar statistical analysis used from sheep-grazing to measure biomass. Additional plot inspiration was taken from percent biomass change in sheep-grazing, using percent change in cover for our analysis instead.
+  
   Weather data was taken from NOAA weather gauge USW00053152 in Santa Barbara, at longitude and latitude 34.4141 and -119.8796 from the years 2020 to 2025.  
 
 
