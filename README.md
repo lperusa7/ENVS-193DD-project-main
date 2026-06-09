@@ -8,23 +8,20 @@ North Campus Open Space (NCOS) Mesa Perennial Grassland at UC Santa Barbara. The
 ```
 ENVS-193DD-project-main/
 ├── code/
-│   ├── Background.qmd
-│   ├── exploratory-visualization1.qmd
-│   ├── exploratory-visualization2.qmd
-│   ├── stats.qmd
-│   ├── storymap_structure_outline.qmd
-│   ├── timeline-checkin.qmd
-│   ├── visualizations.qmd
-│   └── wrangling-brainstorm.qmd
+│   ├── ecology.csl
+│   ├── final_paper.pdf
+│   ├── final_paper.qmd
+│   ├── references.bib
+│   ├── timeline-checkin.pdf
+│   └── timeline-ckeckin.qmd
 ├── data/
 │   ├── raw/
+│   │   ├── NOAA-weather-data.csv
 │   │   ├── veg.csv
-│   │   ├── vp_veg_metadata.csv
-│   │   └── NOAA-weather-data.csv
-│   └── processed/
+│   │   └── vp_veg_metadata.csv
 ├── outputs/
-│   ├── fig_1.png
-│   ├── fig_2.png
+│   ├── figure_1.png
+│   ├── figure_2.png
 │   ├── figure_3.png
 │   ├── figure_4.png
 │   └── ttest_table.png
@@ -56,4 +53,10 @@ install.packages(c("tidyverse", "janitor", "here", "ggrepel", "cowplot",
 
 ## Rendered Documents
 
+- [Final Paper](https://github.com/lperusa7/ENVS-193DD-project-main/blob/main/code/final_paper.pdf)
 - [Timeline Check-in](https://github.com/lperusa7/ENVS-193DD-project-main/blob/main/code/timeline-checkin.pdf)
+
+## Related Repositories
+
+- [Project Proposal](https://github.com/lperusa7/project-proposal)
+- [Literature Dissection](https://github.com/lperusa7/literature-dissection)
