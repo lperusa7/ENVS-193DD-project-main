@@ -313,7 +313,7 @@ For burns, percent cover data was collected by ocularly identifying each species
 #| echo: false
 #| fig-width: 10
 #| fig-height: 5
-#| fig-cap: "Mean percent cover of native and non-native grasses along the Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled circles represent the grand mean across transects and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the prescribed burn (Fall 2023) and rotational sheep grazing (Fall 2024) treatment events."
+#| fig-cap: "Mean percent cover of native grasses and non-native vegetation along the seven Mesa (GL) transects at the North Campus Open Space (NCOS) from 2021 to 2025. Filled diamonds represent the grand mean across transects, and open circles represent individual transect means. Shaded ribbons show ±1 standard error. Dashed vertical lines indicate the Fall 2023 prescribed burn and the Fall 2024 rotational sheep grazing treatment events."
 
 TS_plot <- ggplot() +
   # individual transect observations as open circles
