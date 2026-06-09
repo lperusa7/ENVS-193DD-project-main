@@ -1,5 +1,5 @@
 ---
-title: "Final Paper"
+title: "Grassland Vegetation Dynamics Under Intentional Disturbance at NCOS"
 author: "Lukas Lescano, Garrett Mellinger, Minh Tri Ngo"
 format: pdf
 bibliography: references.bib
