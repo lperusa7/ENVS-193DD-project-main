@@ -6,26 +6,26 @@ North Campus Open Space (NCOS) Mesa Perennial Grassland at UC Santa Barbara. The
 ## File Structure
 
 ```
-ENVS-193DD-project-main/
-├── code/
-│   ├── ecology.csl
-│   ├── final_paper.pdf
-│   ├── final_paper.qmd
-│   ├── references.bib
-│   ├── timeline-checkin.pdf
-│   └── timeline-ckeckin.qmd
+ENVS-193DD-project-main/.            # Root project directory
+├── code/                           
+│   ├── ecology.csl                  # Citation style file (Ecology journal format)
+│   ├── final_paper.pdf              # Rendered final paper
+│   ├── final_paper.qmd              # Quarto document for final paper
+│   ├── references.bib               # BibTeX database of all cited references
+│   ├── timeline-checkin.pdf         # Rendered timeline check-in
+│   └── timeline-ckeckin.qmd         # Quarto document for timeline check-in
 ├── data/
 │   ├── raw/
-│   │   ├── NOAA-weather-data.csv
-│   │   ├── veg.csv
-│   │   └── vp_veg_metadata.csv
+│   │   ├── NOAA-weather-data.csv    # NOAA weather data
+│   │   ├── veg.csv                  # Monitoring report vegetation data
+│   │   └── vp_veg_metadata.csv.     # Monitoring report vegetation metadata 
 ├── outputs/
-│   ├── figure_1.png
-│   ├── figure_2.png
-│   ├── figure_3.png
-│   ├── figure_4.png
-│   └── ttest_table.png
-└── README.md
+│   ├── figure_1.png                 # Native vs. non-native grass cover over time figure
+│   ├── figure_2.png                 # Sweet and bur clover over time figure
+│   ├── figure_3.png                 # Mean percent cover change before and after the burn figure
+│   ├── figure_4.png                 # Mean percent cover before and after disturbance figure
+│   └── ttest_table.png              # Paired t-test results for the four focal
+└── README.md                        # Project overview and file documentation (this file)
 ```
 
 ## Dependencies
